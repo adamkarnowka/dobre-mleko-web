@@ -4,9 +4,57 @@ import { expect, test, type Page } from '@playwright/test';
 
 const errors: string[] = [];
 
-test.beforeEach(({ page }) => {
+// Place search (Photon): canned answers, never the real service.
+const photon = (properties: Record<string, unknown>, lng: number, lat: number) => ({
+  type: 'Feature',
+  geometry: { type: 'Point', coordinates: [lng, lat] },
+  properties: { country: 'Polska', city: 'Warszawa', ...properties },
+});
+const SEARCH = [
+  photon(
+    {
+      osm_type: 'N',
+      osm_id: 1,
+      osm_key: 'amenity',
+      osm_value: 'cafe',
+      name: 'Kawiarnia Relaks',
+      street: 'Złota',
+      housenumber: '8',
+    },
+    21.0071,
+    52.2303,
+  ),
+  photon(
+    { osm_type: 'W', osm_id: 2, osm_key: 'highway', osm_value: 'residential', type: 'street', name: 'Relaksowa' },
+    21.05,
+    52.2,
+  ),
+];
+const REVERSE = [
+  photon(
+    {
+      osm_type: 'N',
+      osm_id: 3,
+      osm_key: 'building',
+      osm_value: 'yes',
+      type: 'house',
+      street: 'Marszałkowska',
+      housenumber: '10',
+    },
+    21.01,
+    52.23,
+  ),
+];
+
+test.beforeEach(async ({ page }) => {
   errors.length = 0;
   page.on('pageerror', (e) => errors.push(e.message));
+  await page.route(/photon\.komoot\.io/, (route) =>
+    route.fulfill({
+      json: { type: 'FeatureCollection', features: route.request().url().includes('/reverse') ? REVERSE : SEARCH },
+      headers: { 'access-control-allow-origin': '*' },
+    }),
+  );
 });
 
 test.afterEach(() => {
@@ -121,6 +169,44 @@ test('add a place with rating, photo and map pin', async ({ page }) => {
 
   await page.goto(`/?q=${encodeURIComponent(name)}`);
   await expect(page.locator('.place-card [data-layout="c"] .fx-halftone')).toBeVisible();
+});
+
+test('find a place by search, then move the pin', async ({ page }) => {
+  await signIn(page, 'tomek@example.com', '/add');
+  await page.getByLabel('Szukaj miejsca lub adresu').fill('relaks');
+  await page.getByRole('option', { name: /Kawiarnia Relaks/ }).click();
+
+  // Name, category, address and pin come from the result.
+  await expect(page.getByLabel('Nazwa')).toHaveValue('Kawiarnia Relaks');
+  await expect(page.getByRole('button', { name: 'Kawa', exact: true })).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByLabel('Adres', { exact: true })).toHaveValue('Złota 8, Warszawa');
+  await expect(page.getByText('52.23030, 21.00710')).toBeVisible();
+
+  // Dragging the pin replaces an address we filled in…
+  const map = page.locator('.map-picker');
+  const pin = map.locator('.maplibregl-marker');
+  await expect(pin).toBeVisible();
+  await map.scrollIntoViewIfNeeded();
+  const box = (await pin.boundingBox())!;
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width / 2 + 60, box.y + box.height / 2 + 40, { steps: 8 });
+  await page.mouse.up();
+  await expect(page.getByLabel('Adres', { exact: true })).toHaveValue('Marszałkowska 10, Warszawa');
+  await expect(page.getByText('52.23030, 21.00710')).toBeHidden();
+
+  // …but never one the author typed.
+  await page.getByLabel('Adres', { exact: true }).fill('Złota 8 (wejście od podwórza)');
+  await map.click({ position: { x: 60, y: 60 } });
+  await expect(page.getByText(/^52\.\d+, 2\d\.\d+$/)).toBeVisible();
+  await expect(page.getByLabel('Adres', { exact: true })).toHaveValue('Złota 8 (wejście od podwórza)');
+
+  // Keyboard: arrows and Enter pick, without submitting the form.
+  await page.getByLabel('Szukaj miejsca lub adresu').fill('relaksowa');
+  await page.getByLabel('Szukaj miejsca lub adresu').press('ArrowDown');
+  await page.getByLabel('Szukaj miejsca lub adresu').press('Enter');
+  await expect(page.getByText('52.20000, 21.05000')).toBeVisible();
+  await expect(page).toHaveURL(/\/add$/);
 });
 
 test('change a place card style', async ({ page }) => {

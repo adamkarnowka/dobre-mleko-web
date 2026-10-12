@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useRef, useState, type Dispatch, type SetStateAction } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { api, unwrap, type CardStyle, type Category, type PlaceDetail } from '../../shared/api';
 import { DEFAULT_CARD_STYLE } from '../../shared/cardStyle';
@@ -12,6 +12,8 @@ import { CardStyleFields } from '../components/CardStyleFields';
 import { MapView } from '../components/MapView';
 import { PhotoPicker, type Uploaded } from '../components/PhotoPicker';
 import { EMPTY_SCORES, RatingInput, scoresComplete, type ScoresDraft } from '../components/RatingInput';
+import { PlaceSearch } from '../components/PlaceSearch';
+import { reverseGeocode, type GeoResult } from '../geocode';
 import { useGeo, WARSAW, type Coords } from '../geo';
 import { usePlace } from './PlacePage';
 
@@ -263,9 +265,46 @@ function EditPlace({ p }: { p: PlaceDetail }) {
   );
 }
 
-function PlaceFields({ draft, onChange }: { draft: Draft; onChange: (d: Draft) => void }) {
+const roundCoords = (c: Coords): Coords => ({ lat: Math.round(c.lat * 1e6) / 1e6, lng: Math.round(c.lng * 1e6) / 1e6 });
+
+function PlaceFields({ draft, onChange }: { draft: Draft; onChange: Dispatch<SetStateAction<Draft>> }) {
   const geo = useGeo();
-  const set = (patch: Partial<Draft>) => onChange({ ...draft, ...patch });
+  const set = (patch: Partial<Draft>) => onChange((d) => ({ ...d, ...patch }));
+  // The address we filled in ourselves: replaced when the pin moves, unlike one the author typed.
+  const autoAddress = useRef<string | null>(null);
+  const lookup = useRef<AbortController | null>(null);
+
+  const currentAddress = useRef(draft.address);
+  currentAddress.current = draft.address;
+
+  const fillAddress = (address: string | null) => {
+    const current = currentAddress.current;
+    if (!address || (current.trim() && current !== autoAddress.current)) return;
+    autoAddress.current = address;
+    set({ address });
+  };
+
+  /** A search result: pin, address, and the name and category when they are still empty. */
+  const pick = (r: GeoResult) => {
+    lookup.current?.abort();
+    fillAddress(r.address);
+    onChange((d) => ({
+      ...d,
+      location: r.location,
+      name: d.name.trim() || !r.name ? d.name : r.name,
+      category: d.category ?? r.category,
+    }));
+  };
+
+  /** A pin set by hand: look up its address. */
+  const pinAt = (c: Coords) => {
+    set({ location: roundCoords(c) });
+    lookup.current?.abort();
+    const ctrl = (lookup.current = new AbortController());
+    reverseGeocode(c, ctrl.signal)
+      .then((r) => fillAddress(r?.address ?? null))
+      .catch(() => {}); // the address stays as it is
+  };
   return (
     <>
       <div className="field">
@@ -298,21 +337,21 @@ function PlaceFields({ draft, onChange }: { draft: Draft; onChange: (d: Draft) =
 
       <fieldset className="field">
         <legend className="label">Miejsce na mapie</legend>
-        <p className="data muted">Kliknij mapę, żeby postawić pinezkę.</p>
+        <PlaceSearch near={draft.location ?? geo.coords ?? WARSAW} onPick={pick} />
+        <p className="data muted">Albo kliknij mapę, żeby postawić pinezkę.</p>
         <MapView
           center={draft.location ?? geo.coords ?? WARSAW}
-          zoom={draft.location ? 16 : 13}
+          zoom={draft.location ? 17 : 13}
           pin={draft.location}
-          onMapClick={(c) =>
-            set({ location: { lat: Math.round(c.lat * 1e6) / 1e6, lng: Math.round(c.lng * 1e6) / 1e6 } })
-          }
+          onMapClick={pinAt}
+          onPinDrag={pinAt}
           className="map-picker"
         />
         <div className="row">
           <button
             type="button"
             className="btn btn-secondary btn-small"
-            onClick={() => (geo.coords ? set({ location: geo.coords }) : geo.request())}
+            onClick={() => (geo.coords ? pinAt(geo.coords) : geo.request())}
           >
             {geo.coords ? 'Tu, gdzie jestem' : geo.status === 'pending' ? 'Szukam…' : 'Użyj mojej lokalizacji'}
           </button>
@@ -331,7 +370,10 @@ function PlaceFields({ draft, onChange }: { draft: Draft; onChange: (d: Draft) =
           maxLength={200}
           placeholder="ul. Nowy Świat 22"
           value={draft.address}
-          onChange={(e) => set({ address: e.target.value })}
+          onChange={(e) => {
+            autoAddress.current = null;
+            set({ address: e.target.value });
+          }}
         />
       </div>
 

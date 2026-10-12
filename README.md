@@ -57,12 +57,14 @@ The e2e tests change data (they add a place and ratings): run `npm run seed -- -
 
 ### Environment
 
-| Variable         | When         |                                                                                        |
-| ---------------- | ------------ | -------------------------------------------------------------------------------------- |
-| `API_URL`        | dev, preview | Where the proxy sends `/api` and `/files` (default `http://localhost:8080`)            |
-| `VITE_MAP_STYLE` | build        | MapLibre style URL (default OpenFreeMap Positron); add its hosts to `MAP_ORIGINS`      |
-| `API_UPSTREAM`   | container    | The API for nginx (default `http://api.dobre-mleko.svc.cluster.local`)                 |
-| `MAP_ORIGINS`    | container    | Map hosts allowed by the CSP's `connect-src` (default `https://tiles.openfreemap.org`) |
+| Variable            | When         |                                                                                                                |
+| ------------------- | ------------ | -------------------------------------------------------------------------------------------------------------- |
+| `API_URL`           | dev, preview | Where the proxy sends `/api` and `/files` (default `http://localhost:8080`)                                    |
+| `VITE_MAP_STYLE`    | build        | MapLibre style URL (default OpenFreeMap Positron); add its hosts to `MAP_ORIGINS`                              |
+| `API_UPSTREAM`      | container    | The API for nginx (default `http://api.dobre-mleko.svc.cluster.local`)                                         |
+| `MAP_ORIGINS`       | container    | Map hosts allowed by the CSP's `connect-src` (default `https://tiles.openfreemap.org`)                         |
+| `VITE_GEOCODER_URL` | build        | Place and address search, a Photon server (default `https://photon.komoot.io`); set `GEOCODER_ORIGIN` to match |
+| `GEOCODER_ORIGIN`   | container    | The search's origin for the CSP (default `https://photon.komoot.io`)                                           |
 
 ## Layout
 

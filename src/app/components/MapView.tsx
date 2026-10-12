@@ -54,6 +54,7 @@ export function MapView({
   onMove,
   onMapClick,
   pin,
+  onPinDrag,
   className,
 }: {
   center: Coords;
@@ -64,12 +65,14 @@ export function MapView({
   onMove?: (bbox: Bbox, center: Coords) => void;
   onMapClick?: (coords: Coords) => void;
   pin?: Coords | null;
+  /** Makes the pin draggable; called where it is dropped. */
+  onPinDrag?: (coords: Coords) => void;
   className?: string;
 }) {
   const container = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
-  const handlers = useRef({ onMove, onMapClick, onMarkerClick });
-  handlers.current = { onMove, onMapClick, onMarkerClick };
+  const handlers = useRef({ onMove, onMapClick, onMarkerClick, onPinDrag });
+  handlers.current = { onMove, onMapClick, onMarkerClick, onPinDrag };
   const drawn = useRef<maplibregl.Marker[]>([]);
   const pinMarker = useRef<maplibregl.Marker | null>(null);
   // The map is created after the style loads; use the latest center, not the first render's.
@@ -112,13 +115,13 @@ export function MapView({
     };
   }, []); // created once; later center changes are applied below
 
-  // Follow center changes (e.g. "my location").
+  // Follow center changes (e.g. "my location", a search result), zooming in to `zoom` but never out.
   useEffect(() => {
     const m = map.current;
     if (m && (Math.abs(m.getCenter().lat - center.lat) > 1e-6 || Math.abs(m.getCenter().lng - center.lng) > 1e-6)) {
-      m.easeTo({ center: [center.lng, center.lat] });
+      m.easeTo({ center: [center.lng, center.lat], zoom: Math.max(m.getZoom(), zoom) });
     }
-  }, [center.lat, center.lng]);
+  }, [center.lat, center.lng, zoom]);
 
   // Markers.
   useEffect(() => {
@@ -143,9 +146,15 @@ export function MapView({
       const m = map.current;
       if (!m) return void setTimeout(draw, 50);
       pinMarker.current?.remove();
-      pinMarker.current = pin
-        ? new maplibregl.Marker({ color: '#D7301F' }).setLngLat([pin.lng, pin.lat]).addTo(m)
-        : null;
+      if (!pin) return void (pinMarker.current = null);
+      const marker = new maplibregl.Marker({ color: '#D7301F', draggable: !!handlers.current.onPinDrag })
+        .setLngLat([pin.lng, pin.lat])
+        .addTo(m);
+      marker.on('dragend', () => {
+        const at = marker.getLngLat();
+        handlers.current.onPinDrag?.({ lat: at.lat, lng: at.lng });
+      });
+      pinMarker.current = marker;
     };
     draw();
   }, [pin?.lat, pin?.lng]);
