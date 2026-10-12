@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { CARD_COLORS, cardColor, DEFAULT_CARD_STYLE, INK, PAPER, resolveLayout, textOn } from './cardStyle';
-import { CATEGORY } from './categories';
+import { categoryInfo } from './categories';
 
 describe('card style', () => {
   it('uses the chosen colour, else the category colour', () => {
-    expect(cardColor(DEFAULT_CARD_STYLE, 'bar')).toBe(CATEGORY.bar.color);
+    expect(cardColor(DEFAULT_CARD_STYLE, 'bar')).toBe(categoryInfo('bar').color);
     expect(cardColor({ ...DEFAULT_CARD_STYLE, color: 'teal' }, 'bar')).toBe(CARD_COLORS.teal.hex);
   });
 

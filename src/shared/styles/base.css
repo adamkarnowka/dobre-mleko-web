@@ -417,3 +417,56 @@ textarea {
     border-bottom: var(--line-1);
   }
 }
+
+/* Colour swatches (card style, admin categories) */
+.swatches {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, 36px);
+  gap: var(--space-2);
+}
+
+.swatch {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: var(--line-2);
+  cursor: pointer;
+}
+
+.swatch[aria-pressed='true'] {
+  outline: 3px solid var(--ink);
+  outline-offset: 2px;
+}
+
+/* Layout helpers shared by the app and the dashboard */
+.row {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.chips a.chip {
+  text-decoration: none;
+}
+
+fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+@media (max-width: 480px) {
+  .tab {
+    padding: 12px 12px;
+    font-size: 16px;
+  }
+}

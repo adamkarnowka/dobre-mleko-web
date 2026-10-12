@@ -61,13 +61,6 @@
   overflow-wrap: anywhere;
 }
 
-.row {
-  display: flex;
-  gap: var(--space-2);
-  align-items: center;
-  flex-wrap: wrap;
-}
-
 .notice {
   border-left: 6px solid var(--red);
   padding: 4px 0 4px 14px;
@@ -93,17 +86,6 @@
 
 .link-button.danger {
   color: var(--red);
-}
-
-.chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  margin-bottom: var(--space-3);
-}
-
-.chips a.chip {
-  text-decoration: none;
 }
 
 .check {
@@ -476,25 +458,6 @@
 .card-style-preview .place-card:hover {
   transform: none;
   box-shadow: none;
-}
-
-.swatches {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, 36px);
-  gap: var(--space-2);
-}
-
-.swatch {
-  width: 36px;
-  height: 36px;
-  padding: 0;
-  border: var(--line-2);
-  cursor: pointer;
-}
-
-.swatch[aria-pressed='true'] {
-  outline: 3px solid var(--ink);
-  outline-offset: 2px;
 }
 
 .swatch-category {

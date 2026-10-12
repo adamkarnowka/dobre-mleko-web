@@ -1,7 +1,7 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
 import { api, unwrap } from '../../shared/api';
-import { CATEGORY } from '../../shared/categories';
+import { categoryInfo } from '../../shared/categories';
 import { MapView, type Bbox } from '../components/MapView';
 import { PlaceCard } from '../components/PlaceCard';
 import { useGeo, DEFAULT_CENTER } from '../geo';
@@ -39,7 +39,7 @@ export function MapPage() {
         lat: p.location.lat,
         lng: p.location.lng,
         category: p.category_id,
-        label: `${p.name}, ${CATEGORY[p.category_id].label}`,
+        label: `${p.name}, ${categoryInfo(p.category_id).label}`,
       })),
     [items],
   );

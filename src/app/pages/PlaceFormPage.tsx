@@ -3,7 +3,7 @@ import { useRef, useState, type Dispatch, type SetStateAction } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { api, unwrap, type CardStyle, type Category, type PlaceDetail } from '../../shared/api';
 import { DEFAULT_CARD_STYLE } from '../../shared/cardStyle';
-import { CATEGORY, CATEGORY_IDS, STATUS_LABEL } from '../../shared/categories';
+import { categoryInfo, categoryChoices, STATUS_LABEL } from '../../shared/categories';
 import { CategoryMark } from '../../shared/components/CategoryMark';
 import { useToast } from '../../shared/components/Toast';
 import { PRICE } from '../../shared/format';
@@ -292,7 +292,8 @@ function PlaceFields({ draft, onChange }: { draft: Draft; onChange: Dispatch<Set
       ...d,
       location: r.location,
       name: d.name.trim() || !r.name ? d.name : r.name,
-      category: d.category ?? r.category,
+      // Only a category that is still offered.
+      category: d.category ?? (r.category && categoryInfo(r.category).active ? r.category : null),
     }));
   };
 
@@ -321,7 +322,7 @@ function PlaceFields({ draft, onChange }: { draft: Draft; onChange: Dispatch<Set
       <fieldset className="field">
         <legend className="label">Kategoria</legend>
         <div className="chips">
-          {CATEGORY_IDS.map((c) => (
+          {categoryChoices([draft.category]).map(({ id: c }) => (
             <button
               key={c}
               type="button"
@@ -329,7 +330,7 @@ function PlaceFields({ draft, onChange }: { draft: Draft; onChange: Dispatch<Set
               aria-pressed={draft.category === c}
               onClick={() => set({ category: c })}
             >
-              <CategoryMark category={c} size={14} /> {CATEGORY[c].label}
+              <CategoryMark category={c} size={14} /> {categoryInfo(c).label}
             </button>
           ))}
         </div>

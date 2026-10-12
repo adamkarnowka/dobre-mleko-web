@@ -245,6 +245,52 @@ test('admin dashboard', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Odkrywaj' })).toBeVisible();
 });
 
+test('admin manages categories, and the app follows', async ({ page }, info) => {
+  const label = `Sauna ${info.project.name}`;
+  await signIn(page, 'marta@example.com', '/admin/');
+  await page.getByRole('tab', { name: 'Kategorie' }).click();
+  await expect(page.getByRole('listitem', { name: 'Hotel' })).toBeVisible();
+
+  // Add: the id follows the name.
+  await page.getByLabel('Nazwa').fill(label);
+  await expect(page.getByLabel('Identyfikator')).toHaveValue(`sauna_${info.project.name}`);
+  await page.getByRole('button', { name: 'Morski' }).click();
+  await page.getByRole('button', { name: 'Domek' }).click();
+  await page.getByRole('button', { name: 'Dodaj kategorię' }).click();
+  const row = page.getByRole('listitem', { name: label });
+  await expect(row).toContainText('0 miejsc');
+
+  // The app offers it for new places…
+  await page.goto('/add');
+  await expect(page.getByRole('button', { name: label, exact: true })).toBeVisible();
+
+  // …until it is retired.
+  await page.goto('/admin/');
+  await page.getByRole('tab', { name: 'Kategorie' }).click();
+  await row.getByRole('button', { name: 'Wycofaj' }).click();
+  await expect(row).toContainText('Wycofana');
+  await page.goto('/add');
+  await expect(page.getByRole('button', { name: 'Kawa', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: label, exact: true })).toHaveCount(0);
+
+  // Rename, reorder and delete.
+  await page.goto('/admin/');
+  await page.getByRole('tab', { name: 'Kategorie' }).click();
+  await row.getByRole('button', { name: 'Edytuj' }).click();
+  await row.getByLabel('Nazwa').fill(`${label} i basen`);
+  await row.getByRole('button', { name: 'Zapisz' }).click();
+  const renamed = page.getByRole('listitem', { name: `${label} i basen` });
+  await expect(renamed).toBeVisible();
+  await renamed.getByRole('button', { name: /wyżej/ }).click();
+  await expect(renamed.getByRole('button', { name: /wyżej/ })).toBeEnabled();
+  page.once('dialog', (d) => d.accept());
+  await renamed.getByRole('button', { name: 'Usuń' }).click();
+  await expect(renamed).toHaveCount(0);
+
+  // A category with places can only be retired.
+  await expect(page.getByRole('listitem', { name: 'Kawa' }).getByRole('button', { name: 'Usuń' })).toBeDisabled();
+});
+
 test('members cannot use the dashboard', async ({ page }) => {
   await signIn(page, 'kuba@example.com', '/admin/');
   await expect(page.getByRole('heading', { name: 'Brak dostępu' })).toBeVisible();

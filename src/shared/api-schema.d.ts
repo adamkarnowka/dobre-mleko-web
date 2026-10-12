@@ -549,6 +549,74 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/admin/categories': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Categories
+     * @description Every category with its number of places, in display order.
+     */
+    get: operations['getAdminCategories'];
+    put?: never;
+    /**
+     * Add a category
+     * @description Added at the end of the list, active. The id is permanent (places refer to it): lowercase letters, digits and `_`, 2–32 characters. 409 `category_exists` when the id or the name is taken.
+     */
+    post: operations['postAdminCategories'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/admin/categories/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * Delete a category
+     * @description Only a category without places (409 `category_in_use` with `places`; retire it instead). It is also removed from people’s favourite categories. 409 `last_category`.
+     */
+    delete: operations['deleteAdminCategoriesById'];
+    options?: never;
+    head?: never;
+    /**
+     * Change a category
+     * @description Name, colour, shape, or `active`: retiring a category keeps its places but stops it being offered for new ones. 409 `category_exists`, `last_category`.
+     */
+    patch: operations['patchAdminCategoriesById'];
+    trace?: never;
+  };
+  '/admin/categories/order': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * Reorder the categories
+     * @description Every category id once, in the new display order. 422 `invalid_input` otherwise.
+     */
+    put: operations['putAdminCategoriesOrder'];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -571,19 +639,7 @@ export interface components {
       role: 'member' | 'admin';
       /** @enum {string} */
       status: 'active' | 'suspended' | 'deleted';
-      favorite_categories: (
-        | 'food'
-        | 'coffee'
-        | 'bar'
-        | 'club'
-        | 'kids'
-        | 'culture'
-        | 'nature'
-        | 'sport'
-        | 'shopping'
-        | 'hotel'
-        | 'other'
-      )[];
+      favorite_categories: string[];
       /** @description Signed URL of the own avatar, else the Google picture */
       avatar_url: string | null;
       /** Format: date-time */
@@ -605,19 +661,7 @@ export interface components {
       role: 'member' | 'admin';
       /** @enum {string} */
       status: 'active' | 'suspended' | 'deleted';
-      favorite_categories: (
-        | 'food'
-        | 'coffee'
-        | 'bar'
-        | 'club'
-        | 'kids'
-        | 'culture'
-        | 'nature'
-        | 'sport'
-        | 'shopping'
-        | 'hotel'
-        | 'other'
-      )[];
+      favorite_categories: string[];
       /** @description Signed URL of the own avatar, else the Google picture */
       avatar_url: string | null;
       /** Format: date-time */
@@ -689,19 +733,8 @@ export interface components {
       /** Format: uuid */
       id: string;
       name: string;
-      /** @enum {string} */
-      category_id:
-        | 'food'
-        | 'coffee'
-        | 'bar'
-        | 'club'
-        | 'kids'
-        | 'culture'
-        | 'nature'
-        | 'sport'
-        | 'shopping'
-        | 'hotel'
-        | 'other';
+      /** @description A category id; `category_details` in GET /meta describes it */
+      category_id: string;
       /** @enum {string} */
       status: 'active' | 'temporarily_closed' | 'closed';
       price_level: number | null;
@@ -774,19 +807,8 @@ export interface components {
       /** Format: uuid */
       id: string;
       name: string;
-      /** @enum {string} */
-      category_id:
-        | 'food'
-        | 'coffee'
-        | 'bar'
-        | 'club'
-        | 'kids'
-        | 'culture'
-        | 'nature'
-        | 'sport'
-        | 'shopping'
-        | 'hotel'
-        | 'other';
+      /** @description A category id; `category_details` in GET /meta describes it */
+      category_id: string;
       /** @enum {string} */
       status: 'active' | 'temporarily_closed' | 'closed';
       price_level: number | null;
@@ -869,19 +891,8 @@ export interface components {
           /** Format: uuid */
           id: string;
           name: string;
-          /** @enum {string} */
-          category_id:
-            | 'food'
-            | 'coffee'
-            | 'bar'
-            | 'club'
-            | 'kids'
-            | 'culture'
-            | 'nature'
-            | 'sport'
-            | 'shopping'
-            | 'hotel'
-            | 'other';
+          /** @description A category id; `category_details` in GET /meta describes it */
+          category_id: string;
         };
         scores: components['schemas']['Scores'];
         overall: number;
@@ -919,19 +930,8 @@ export interface components {
       top: components['schemas']['PlaceSummary'][];
       /** @description Places per category, most first */
       categories: {
-        /** @enum {string} */
-        category_id:
-          | 'food'
-          | 'coffee'
-          | 'bar'
-          | 'club'
-          | 'kids'
-          | 'culture'
-          | 'nature'
-          | 'sport'
-          | 'shopping'
-          | 'hotel'
-          | 'other';
+        /** @description A category id; `category_details` in GET /meta describes it */
+        category_id: string;
         count: number;
       }[];
       /** @description Ratings per week for the last 12 weeks (Monday-based), oldest first */
@@ -951,19 +951,8 @@ export interface components {
       };
       /** @description Places I rated, per category, most first */
       categories: {
-        /** @enum {string} */
-        category_id:
-          | 'food'
-          | 'coffee'
-          | 'bar'
-          | 'club'
-          | 'kids'
-          | 'culture'
-          | 'nature'
-          | 'sport'
-          | 'shopping'
-          | 'hotel'
-          | 'other';
+        /** @description A category id; `category_details` in GET /meta describes it */
+        category_id: string;
         count: number;
       }[];
       /** @description Top 3 members by taste match (0–1), from at least 3 places rated by both */
@@ -984,20 +973,29 @@ export interface components {
         left: number;
       };
     };
+    /** @description A place category, managed by admins. */
+    Category: {
+      /** @description Stable id, used as `category_id` everywhere */
+      id: string;
+      /** @description Polish name to show */
+      label: string;
+      /** @description Main colour, `#RRGGBB` */
+      color: string;
+      /**
+       * @description The category mark, drawn in `color` in a 44×44 box: `circle` (full circle), `half` (upper half disc sitting on the bottom edge), `triangle` (apex up), `triangle_down` (apex down), `ring` (circle in `color` with a 2 pt ink outline), `square`, `quarter` (quarter disc, square corner at bottom right), `house` (pentagon: square with a roof, eaves at 18/44).
+       * @enum {string}
+       */
+      shape: 'circle' | 'half' | 'triangle' | 'triangle_down' | 'ring' | 'square' | 'quarter' | 'house';
+      /** @description Display order, ascending */
+      position: number;
+      /** @description False when retired: existing places keep it (still draw it), but do not offer it for new ones */
+      active: boolean;
+    };
     Meta: {
-      categories: (
-        | 'food'
-        | 'coffee'
-        | 'bar'
-        | 'club'
-        | 'kids'
-        | 'culture'
-        | 'nature'
-        | 'sport'
-        | 'shopping'
-        | 'hotel'
-        | 'other'
-      )[];
+      /** @description Ids of the active categories in display order (older clients; see category_details) */
+      categories: string[];
+      /** @description Every category, retired ones too, in display order. Cache it with the rest of /meta. */
+      category_details: components['schemas']['Category'][];
       criteria: {
         /** @enum {string} */
         key: 'vibe' | 'offer' | 'service' | 'value';
@@ -1065,6 +1063,35 @@ export interface components {
     };
     SettingList: {
       items: components['schemas']['Setting'][];
+    };
+    AdminCategory: {
+      /** @description Stable id, used as `category_id` everywhere */
+      id: string;
+      /** @description Polish name to show */
+      label: string;
+      /** @description Main colour, `#RRGGBB` */
+      color: string;
+      /**
+       * @description The category mark, drawn in `color` in a 44×44 box: `circle` (full circle), `half` (upper half disc sitting on the bottom edge), `triangle` (apex up), `triangle_down` (apex down), `ring` (circle in `color` with a 2 pt ink outline), `square`, `quarter` (quarter disc, square corner at bottom right), `house` (pentagon: square with a roof, eaves at 18/44).
+       * @enum {string}
+       */
+      shape: 'circle' | 'half' | 'triangle' | 'triangle_down' | 'ring' | 'square' | 'quarter' | 'house';
+      /** @description Display order, ascending */
+      position: number;
+      /** @description False when retired: existing places keep it (still draw it), but do not offer it for new ones */
+      active: boolean;
+      /** @description Places in this category */
+      places: number;
+      /** Format: date-time */
+      updated_at: string;
+      updated_by: {
+        /** Format: uuid */
+        id: string;
+        display_name: string;
+      } | null;
+    };
+    AdminCategoryList: {
+      items: components['schemas']['AdminCategory'][];
     };
   };
   responses: never;
@@ -1217,19 +1244,7 @@ export interface operations {
         'application/json': {
           display_name?: string;
           badge?: string | null;
-          favorite_categories?: (
-            | 'food'
-            | 'coffee'
-            | 'bar'
-            | 'club'
-            | 'kids'
-            | 'culture'
-            | 'nature'
-            | 'sport'
-            | 'shopping'
-            | 'hotel'
-            | 'other'
-          )[];
+          favorite_categories?: string[];
         };
       };
     };
@@ -1267,19 +1282,7 @@ export interface operations {
           display_name: string;
           badge?: string | null;
           /** @default [] */
-          favorite_categories?: (
-            | 'food'
-            | 'coffee'
-            | 'bar'
-            | 'club'
-            | 'kids'
-            | 'culture'
-            | 'nature'
-            | 'sport'
-            | 'shopping'
-            | 'hotel'
-            | 'other'
-          )[];
+          favorite_categories?: string[];
         };
       };
     };
@@ -1474,7 +1477,7 @@ export interface operations {
       query?: {
         /** @description Name, description, address or tags; ignores case and Polish accents */
         q?: string;
-        /** @description Comma-separated, any of them */
+        /** @description Comma-separated category ids, any of them */
         categories?: string;
         min_rating?: number;
         gold_only?: 'true' | 'false';
@@ -1535,19 +1538,8 @@ export interface operations {
       content: {
         'application/json': {
           name: string;
-          /** @enum {string} */
-          category_id:
-            | 'food'
-            | 'coffee'
-            | 'bar'
-            | 'club'
-            | 'kids'
-            | 'culture'
-            | 'nature'
-            | 'sport'
-            | 'shopping'
-            | 'hotel'
-            | 'other';
+          /** @description An active category id (GET /meta) */
+          category_id: string;
           location: {
             lat: number;
             lng: number;
@@ -1740,19 +1732,8 @@ export interface operations {
       content: {
         'application/json': {
           name?: string;
-          /** @enum {string} */
-          category_id?:
-            | 'food'
-            | 'coffee'
-            | 'bar'
-            | 'club'
-            | 'kids'
-            | 'culture'
-            | 'nature'
-            | 'sport'
-            | 'shopping'
-            | 'hotel'
-            | 'other';
+          /** @description An active category id (GET /meta) */
+          category_id?: string;
           /** @enum {string} */
           status?: 'active' | 'temporarily_closed' | 'closed';
           price_level?: number | null;
@@ -2594,6 +2575,179 @@ export interface operations {
         };
         content: {
           'application/json': components['schemas']['Setting'];
+        };
+      };
+      /** @description Error */
+      '4XX': {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Error'];
+        };
+      };
+    };
+  };
+  getAdminCategories: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AdminCategoryList'];
+        };
+      };
+      /** @description Error */
+      '4XX': {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Error'];
+        };
+      };
+    };
+  };
+  postAdminCategories: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          id: string;
+          label: string;
+          color: string;
+          /** @enum {string} */
+          shape: 'circle' | 'half' | 'triangle' | 'triangle_down' | 'ring' | 'square' | 'quarter' | 'house';
+        };
+      };
+    };
+    responses: {
+      /** @description OK */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AdminCategory'];
+        };
+      };
+      /** @description Error */
+      '4XX': {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Error'];
+        };
+      };
+    };
+  };
+  deleteAdminCategoriesById: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Done, no content */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Error */
+      '4XX': {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Error'];
+        };
+      };
+    };
+  };
+  patchAdminCategoriesById: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          label?: string;
+          color?: string;
+          /** @enum {string} */
+          shape?: 'circle' | 'half' | 'triangle' | 'triangle_down' | 'ring' | 'square' | 'quarter' | 'house';
+          active?: boolean;
+        };
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AdminCategory'];
+        };
+      };
+      /** @description Error */
+      '4XX': {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Error'];
+        };
+      };
+    };
+  };
+  putAdminCategoriesOrder: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          ids: string[];
+        };
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AdminCategoryList'];
         };
       };
       /** @description Error */

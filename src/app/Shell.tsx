@@ -1,5 +1,6 @@
 import { NavLink, Outlet, ScrollRestoration } from 'react-router-dom';
 import { Avatar } from '../shared/components/Avatar';
+import { useCategories } from '../shared/categories';
 import { Brand } from '../shared/components/Brand';
 import { SignIn } from '../shared/components/SignIn';
 import { useMe, useSessionReset, useToken } from '../shared/session';
@@ -16,6 +17,7 @@ const NAV = [
 /** Signed out → manifest and sign-in; profile unfinished → onboarding; else the app with its navigation. */
 export function Shell() {
   useSessionReset();
+  useCategories();
   const token = useToken();
   const me = useMe();
 

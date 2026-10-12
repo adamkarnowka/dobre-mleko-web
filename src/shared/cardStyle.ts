@@ -1,5 +1,5 @@
 import type { CardStyle, Category } from './api';
-import { CATEGORY } from './categories';
+import { categoryInfo } from './categories';
 
 // How a place looks in lists and on its page, chosen by its author (card_style in the API).
 
@@ -56,7 +56,7 @@ export const INK = '#141414';
 
 /** The card's main colour: the chosen one, else the category's. */
 export const cardColor = (style: CardStyle | undefined, category: Category) =>
-  style?.color ? CARD_COLORS[style.color].hex : CATEGORY[category].color;
+  style?.color ? CARD_COLORS[style.color].hex : categoryInfo(category).color;
 
 const AUTO_ORDER: CardLayout[] = ['a', 'c', 'b'];
 

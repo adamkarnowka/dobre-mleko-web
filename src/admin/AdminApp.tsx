@@ -1,15 +1,18 @@
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { api, unwrap } from '../shared/api';
+import { useCategories } from '../shared/categories';
 import { Brand } from '../shared/components/Brand';
 import { SignIn } from '../shared/components/SignIn';
 import { number } from '../shared/format';
 import { signOut, useMe, useSessionReset, useToken } from '../shared/session';
+import { Categories } from './Categories';
 import { People } from './People';
 import { Settings } from './Settings';
 
 export function AdminApp() {
   useSessionReset();
+  useCategories();
   const token = useToken();
   const me = useMe();
 
@@ -55,7 +58,7 @@ export function AdminApp() {
 }
 
 function Dashboard({ myEmail }: { myEmail: string }) {
-  const [tab, setTab] = useState<'people' | 'settings'>('people');
+  const [tab, setTab] = useState<'people' | 'categories' | 'settings'>('people');
   const stats = useQuery({ queryKey: ['stats', 'network'], queryFn: () => unwrap(api.GET('/stats/network')) });
   const s = stats.data;
   return (
@@ -79,6 +82,7 @@ function Dashboard({ myEmail }: { myEmail: string }) {
         {(
           [
             ['people', 'Ludzie'],
+            ['categories', 'Kategorie'],
             ['settings', 'Ustawienia'],
           ] as const
         ).map(([key, label]) => (
@@ -94,7 +98,7 @@ function Dashboard({ myEmail }: { myEmail: string }) {
           </button>
         ))}
       </div>
-      {tab === 'people' ? <People myEmail={myEmail} /> : <Settings />}
+      {tab === 'people' ? <People myEmail={myEmail} /> : tab === 'categories' ? <Categories /> : <Settings />}
     </main>
   );
 }

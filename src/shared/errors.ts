@@ -19,6 +19,9 @@ const MESSAGES: Record<string, string> = {
   already_allowed: 'Ta osoba już jest na liście.',
   managed_by_environment: 'Ten admin jest ustawiony w ADMIN_EMAILS — zmień to w konfiguracji serwera.',
   cannot_change_self: 'Nie możesz odebrać uprawnień samemu sobie.',
+  category_exists: 'Kategoria o tej nazwie lub identyfikatorze już istnieje.',
+  category_in_use: 'Ta kategoria ma miejsca — możesz ją tylko wycofać.',
+  last_category: 'Co najmniej jedna kategoria musi zostać aktywna.',
 };
 
 export function errorMessage(err: unknown): string {

@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { api, unwrap, type PlaceDetail } from '../../shared/api';
-import { CATEGORY } from '../../shared/categories';
+import { categoryInfo } from '../../shared/categories';
 import { PhotoImage } from '../../shared/components/PhotoImage';
 import { useToast } from '../../shared/components/Toast';
 import { useMe, useMeta } from '../../shared/session';
@@ -76,7 +76,7 @@ function Rate({ p }: { p: PlaceDetail }) {
       }}
     >
       <header className="page-head">
-        <p className="label">Twoja ocena · {CATEGORY[p.category_id].label}</p>
+        <p className="label">Twoja ocena · {categoryInfo(p.category_id).label}</p>
         <h1 className="display">{p.name}</h1>
       </header>
 

@@ -2,7 +2,7 @@ import { useInfiniteQuery } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { api, unwrap, type Category } from '../../shared/api';
-import { CATEGORY, CATEGORY_IDS } from '../../shared/categories';
+import { categoryInfo, categoryChoices } from '../../shared/categories';
 import { CategoryMark } from '../../shared/components/CategoryMark';
 import { count } from '../../shared/format';
 import { PlaceCard } from '../components/PlaceCard';
@@ -147,7 +147,7 @@ export function DiscoverPage() {
       <details className="filters" open={activeFilters > 0 || undefined}>
         <summary className="label">Filtry{activeFilters > 0 && <span className="badge">{activeFilters}</span>}</summary>
         <div className="chips" role="group" aria-label="Kategorie">
-          {CATEGORY_IDS.map((c) => {
+          {categoryChoices(categories).map(({ id: c }) => {
             const on = categories.includes(c);
             return (
               <button
@@ -159,7 +159,7 @@ export function DiscoverPage() {
                   set({ categories: (on ? categories.filter((x) => x !== c) : [...categories, c]).join(',') || null })
                 }
               >
-                <CategoryMark category={c} size={14} /> {CATEGORY[c].label}
+                <CategoryMark category={c} size={14} /> {categoryInfo(c).label}
               </button>
             );
           })}

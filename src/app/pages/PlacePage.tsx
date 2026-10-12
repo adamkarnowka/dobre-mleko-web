@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { api, unwrap, type Comment, type PlaceDetail } from '../../shared/api';
 import { cardColor, textOn } from '../../shared/cardStyle';
-import { CATEGORY, CRITERIA, STATUS_LABEL } from '../../shared/categories';
+import { categoryInfo, CRITERIA, STATUS_LABEL } from '../../shared/categories';
 import { Avatar } from '../../shared/components/Avatar';
 import { CategoryMark } from '../../shared/components/CategoryMark';
 import { PhotoImage } from '../../shared/components/PhotoImage';
@@ -64,7 +64,7 @@ function Place({ p }: { p: PlaceDetail }) {
     onError: toast.fail,
   });
 
-  const c = CATEGORY[p.category_id];
+  const c = categoryInfo(p.category_id);
   const dist = distance(p.distance_m);
   const strongest = CRITERIA.find((k) => k.key === p.strongest_criterion);
   const canEdit = p.is_mine || me?.is_admin;

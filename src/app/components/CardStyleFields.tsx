@@ -1,6 +1,6 @@
 import type { CardStyle, Category, Photo } from '../../shared/api';
 import { CARD_COLOR_IDS, CARD_COLORS, FILTERS, LAYOUTS, textOn, type PhotoFilter } from '../../shared/cardStyle';
-import { CATEGORY } from '../../shared/categories';
+import { categoryInfo } from '../../shared/categories';
 import { CategoryMark } from '../../shared/components/CategoryMark';
 import { CardArt } from './CardArt';
 
@@ -52,12 +52,12 @@ export function CardStyleFields({
                 type="button"
                 className="swatch swatch-category"
                 aria-pressed={value.color === null}
-                aria-label={`Kolor kategorii (${CATEGORY[cat].label})`}
+                aria-label={`Kolor kategorii (${categoryInfo(cat).label})`}
                 title="Kolor kategorii"
-                style={{ background: CATEGORY[cat].color }}
+                style={{ background: categoryInfo(cat).color }}
                 onClick={() => set({ color: null })}
               >
-                <CategoryMark category={cat} size={16} color={textOn(CATEGORY[cat].color)} />
+                <CategoryMark category={cat} size={16} color={textOn(categoryInfo(cat).color)} />
               </button>
               {CARD_COLOR_IDS.map((c) => (
                 <button
@@ -73,7 +73,7 @@ export function CardStyleFields({
               ))}
             </div>
             <span className="data muted">
-              {value.color ? CARD_COLORS[value.color].label : `Kolor kategorii · ${CATEGORY[cat].label}`}
+              {value.color ? CARD_COLORS[value.color].label : `Kolor kategorii · ${categoryInfo(cat).label}`}
             </span>
           </fieldset>
 
@@ -115,7 +115,7 @@ export function CardStyleFields({
             <CardArt category={cat} style={value} photo={photo} position={0} />
             <div className="place-card-body">
               <h3 className="place-card-name">{name.trim() || 'Nazwa miejsca'}</h3>
-              <p className="label place-card-meta">{CATEGORY[cat].label}</p>
+              <p className="label place-card-meta">{categoryInfo(cat).label}</p>
             </div>
           </div>
           {!photo && value.layout !== 'b' && <span className="data muted">Bez zdjęcia karta jest plakatem.</span>}

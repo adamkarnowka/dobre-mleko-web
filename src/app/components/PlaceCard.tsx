@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import type { PlaceSummary } from '../../shared/api';
-import { CATEGORY } from '../../shared/categories';
+import { categoryInfo } from '../../shared/categories';
 import { CategoryMark } from '../../shared/components/CategoryMark';
 import { count, distance, rating } from '../../shared/format';
 import { CardArt } from './CardArt';
@@ -42,7 +42,7 @@ export function PlaceCard({
           {dist && <span className="data place-card-dist">{dist}</span>}
         </div>
         <p className="label place-card-meta">
-          <CategoryMark category={p.category_id} size={12} /> {CATEGORY[p.category_id].label} · poleca{' '}
+          <CategoryMark category={p.category_id} size={12} /> {categoryInfo(p.category_id).label} · poleca{' '}
           {p.author.display_name}
           {p.status !== 'active' && (
             <span className="badge">{p.status === 'closed' ? 'Zamknięte' : 'Chwilowo zamknięte'}</span>

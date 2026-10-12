@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api, unwrap, type MyStats, type NetworkStats } from '../../shared/api';
-import { CATEGORY } from '../../shared/categories';
+import { categoryInfo } from '../../shared/categories';
 import { Avatar } from '../../shared/components/Avatar';
 import { CategoryMark } from '../../shared/components/CategoryMark';
 import { number, rating } from '../../shared/format';
@@ -90,7 +90,7 @@ function Network() {
             <span className="label">Gwiazda miesiąca</span>
             <span className="title">{s.star_of_the_month.place.name}</span>
             <span className="label">
-              ★ {s.star_of_the_month.stars} · {CATEGORY[s.star_of_the_month.place.category_id].label}
+              ★ {s.star_of_the_month.stars} · {categoryInfo(s.star_of_the_month.place.category_id).label}
             </span>
           </Link>
         )}
@@ -131,7 +131,7 @@ function Network() {
   );
 }
 
-function CategoryShare({ items }: { items: { category_id: keyof typeof CATEGORY; count: number }[] }) {
+function CategoryShare({ items }: { items: { category_id: string; count: number }[] }) {
   const total = items.reduce((a, b) => a + b.count, 0) || 1;
   return (
     <>
@@ -139,7 +139,7 @@ function CategoryShare({ items }: { items: { category_id: keyof typeof CATEGORY;
         {items.map((c) => (
           <span
             key={c.category_id}
-            style={{ width: `${(c.count / total) * 100}%`, background: CATEGORY[c.category_id].color }}
+            style={{ width: `${(c.count / total) * 100}%`, background: categoryInfo(c.category_id).color }}
           />
         ))}
       </div>
@@ -147,7 +147,7 @@ function CategoryShare({ items }: { items: { category_id: keyof typeof CATEGORY;
         {items.map((c) => (
           <li key={c.category_id}>
             <CategoryMark category={c.category_id} size={14} />
-            <span>{CATEGORY[c.category_id].label}</span>
+            <span>{categoryInfo(c.category_id).label}</span>
             <span className="data">{Math.round((c.count / total) * 100)}%</span>
           </li>
         ))}

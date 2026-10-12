@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { Category, Me } from '../../shared/api';
-import { CATEGORY, CATEGORY_IDS } from '../../shared/categories';
+import { categoryInfo, categoryChoices } from '../../shared/categories';
 import { CategoryMark } from '../../shared/components/CategoryMark';
 
 export type ProfileDraft = { display_name: string; badge: string; favorite_categories: Category[] };
@@ -55,7 +55,7 @@ export function ProfileForm({
       <fieldset className="field">
         <legend className="label">Ulubione kategorie (do 3)</legend>
         <div className="chips">
-          {CATEGORY_IDS.map((c) => {
+          {categoryChoices(fav).map(({ id: c }) => {
             const on = fav.includes(c);
             return (
               <button
@@ -68,7 +68,7 @@ export function ProfileForm({
                   setDraft({ ...draft, favorite_categories: on ? fav.filter((x) => x !== c) : [...fav, c] })
                 }
               >
-                <CategoryMark category={c} size={14} /> {CATEGORY[c].label}
+                <CategoryMark category={c} size={14} /> {categoryInfo(c).label}
               </button>
             );
           })}
