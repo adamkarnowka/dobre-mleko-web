@@ -202,6 +202,13 @@ textarea {
   color: var(--paper);
 }
 
+/* Category shapes come in every colour, black too: keep them on paper when the chip is ink. */
+.chip[aria-pressed='true'] svg {
+  box-sizing: content-box;
+  padding: 2px;
+  background: var(--paper);
+}
+
 .badge {
   display: inline-block;
   font: 500 11px/1 var(--mono);

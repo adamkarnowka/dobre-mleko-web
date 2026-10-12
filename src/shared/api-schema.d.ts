@@ -581,6 +581,7 @@ export interface components {
         | 'nature'
         | 'sport'
         | 'shopping'
+        | 'hotel'
         | 'other'
       )[];
       /** @description Signed URL of the own avatar, else the Google picture */
@@ -614,6 +615,7 @@ export interface components {
         | 'nature'
         | 'sport'
         | 'shopping'
+        | 'hotel'
         | 'other'
       )[];
       /** @description Signed URL of the own avatar, else the Google picture */
@@ -688,7 +690,18 @@ export interface components {
       id: string;
       name: string;
       /** @enum {string} */
-      category_id: 'food' | 'coffee' | 'bar' | 'club' | 'kids' | 'culture' | 'nature' | 'sport' | 'shopping' | 'other';
+      category_id:
+        | 'food'
+        | 'coffee'
+        | 'bar'
+        | 'club'
+        | 'kids'
+        | 'culture'
+        | 'nature'
+        | 'sport'
+        | 'shopping'
+        | 'hotel'
+        | 'other';
       /** @enum {string} */
       status: 'active' | 'temporarily_closed' | 'closed';
       price_level: number | null;
@@ -762,7 +775,18 @@ export interface components {
       id: string;
       name: string;
       /** @enum {string} */
-      category_id: 'food' | 'coffee' | 'bar' | 'club' | 'kids' | 'culture' | 'nature' | 'sport' | 'shopping' | 'other';
+      category_id:
+        | 'food'
+        | 'coffee'
+        | 'bar'
+        | 'club'
+        | 'kids'
+        | 'culture'
+        | 'nature'
+        | 'sport'
+        | 'shopping'
+        | 'hotel'
+        | 'other';
       /** @enum {string} */
       status: 'active' | 'temporarily_closed' | 'closed';
       price_level: number | null;
@@ -856,6 +880,7 @@ export interface components {
             | 'nature'
             | 'sport'
             | 'shopping'
+            | 'hotel'
             | 'other';
         };
         scores: components['schemas']['Scores'];
@@ -905,6 +930,7 @@ export interface components {
           | 'nature'
           | 'sport'
           | 'shopping'
+          | 'hotel'
           | 'other';
         count: number;
       }[];
@@ -936,6 +962,7 @@ export interface components {
           | 'nature'
           | 'sport'
           | 'shopping'
+          | 'hotel'
           | 'other';
         count: number;
       }[];
@@ -968,6 +995,7 @@ export interface components {
         | 'nature'
         | 'sport'
         | 'shopping'
+        | 'hotel'
         | 'other'
       )[];
       criteria: {
@@ -1199,6 +1227,7 @@ export interface operations {
             | 'nature'
             | 'sport'
             | 'shopping'
+            | 'hotel'
             | 'other'
           )[];
         };
@@ -1248,6 +1277,7 @@ export interface operations {
             | 'nature'
             | 'sport'
             | 'shopping'
+            | 'hotel'
             | 'other'
           )[];
         };
@@ -1516,6 +1546,7 @@ export interface operations {
             | 'nature'
             | 'sport'
             | 'shopping'
+            | 'hotel'
             | 'other';
           location: {
             lat: number;
@@ -1720,6 +1751,7 @@ export interface operations {
             | 'nature'
             | 'sport'
             | 'shopping'
+            | 'hotel'
             | 'other';
           /** @enum {string} */
           status?: 'active' | 'temporarily_closed' | 'closed';

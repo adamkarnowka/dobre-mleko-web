@@ -56,6 +56,9 @@ describe('geocode', () => {
     expect(toResult(feature({ osm_key: 'leisure', osm_value: 'park', name: 'Pole Mokotowskie' })).category).toBe(
       'nature',
     );
+    expect(toResult(feature({ osm_key: 'tourism', osm_value: 'guest_house', name: 'Pensjonat' })).category).toBe(
+      'hotel',
+    );
     expect(toResult(feature({ osm_key: 'amenity', osm_value: 'bank', name: 'Bank' })).category).toBeNull();
   });
 });

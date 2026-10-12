@@ -1,7 +1,7 @@
 import type { Category } from './api';
 
 /** Categories = shape + colour (design system). Colour never carries the meaning alone. */
-export type Shape = 'circle' | 'half' | 'triangle' | 'triangle-down' | 'ring' | 'square' | 'quarter';
+export type Shape = 'circle' | 'half' | 'triangle' | 'triangle-down' | 'ring' | 'square' | 'quarter' | 'house';
 
 export const CATEGORY: Record<Category, { label: string; color: string; shape: Shape }> = {
   food: { label: 'Jedzenie', color: '#D7301F', shape: 'circle' },
@@ -13,6 +13,7 @@ export const CATEGORY: Record<Category, { label: string; color: string; shape: S
   nature: { label: 'Natura', color: '#F2B900', shape: 'triangle' },
   sport: { label: 'Sport', color: '#D7301F', shape: 'quarter' },
   shopping: { label: 'Zakupy', color: '#1D4FA0', shape: 'half' },
+  hotel: { label: 'Hotel', color: '#141414', shape: 'house' },
   other: { label: 'Inne', color: '#141414', shape: 'square' },
 };
 
@@ -40,6 +41,8 @@ export function shapeMarkup(category: Category, color?: string): string {
         : `<circle cx="22" cy="22" r="21" fill="${c}" stroke="#141414" stroke-width="2"/>`;
     case 'square':
       return `<rect width="44" height="44" fill="${c}"/>`;
+    case 'house':
+      return `<polygon points="22,0 44,18 44,44 0,44 0,18" fill="${c}"/>`;
     case 'quarter':
       return `<path d="M44 0 V44 H0 A44 44 0 0 1 44 0 Z" fill="${c}"/>`;
   }

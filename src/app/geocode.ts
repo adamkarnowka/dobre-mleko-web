@@ -73,6 +73,12 @@ const CATEGORY_BY_TAG: Record<string, Category> = {
   'leisure=swimming_pool': 'sport',
   'leisure=ice_rink': 'sport',
   'leisure=pitch': 'sport',
+  'tourism=hotel': 'hotel',
+  'tourism=motel': 'hotel',
+  'tourism=hostel': 'hotel',
+  'tourism=guest_house': 'hotel',
+  'tourism=apartment': 'hotel',
+  'tourism=chalet': 'hotel',
 };
 
 const POI_KEYS = new Set(['amenity', 'shop', 'leisure', 'tourism', 'historic', 'craft', 'club', 'natural', 'office']);
