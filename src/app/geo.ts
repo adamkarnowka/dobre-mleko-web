@@ -2,8 +2,8 @@ import { useCallback, useEffect, useState } from 'react';
 
 export type Coords = { lat: number; lng: number };
 
-/** Warsaw centre, used when the browser location is unknown. */
-export const WARSAW: Coords = { lat: 52.2297, lng: 21.0122 };
+/** Rybnik (Rynek), where the map starts when the browser location is unknown. */
+export const DEFAULT_CENTER: Coords = { lat: 50.0955, lng: 18.5419 };
 
 let cached: Coords | null = null;
 

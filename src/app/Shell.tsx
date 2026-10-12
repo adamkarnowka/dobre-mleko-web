@@ -63,7 +63,7 @@ function Welcome() {
         <span className="ws-square" />
         <span className="ws-triangle" />
       </div>
-      <p className="label">Dobre Mleko · est. 2026 · Warszawa</p>
+      <p className="label">Dobre Mleko · est. 2026 · Rybnik</p>
       <h1 className="welcome-title">
         Tylko
         <br />

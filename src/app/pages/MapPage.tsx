@@ -4,14 +4,14 @@ import { api, unwrap } from '../../shared/api';
 import { CATEGORY } from '../../shared/categories';
 import { MapView, type Bbox } from '../components/MapView';
 import { PlaceCard } from '../components/PlaceCard';
-import { useGeo, WARSAW } from '../geo';
+import { useGeo, DEFAULT_CENTER } from '../geo';
 
 /** Every place in the visible area (bbox), as category-shaped markers. */
 export function MapPage() {
   const geo = useGeo();
   const [bbox, setBbox] = useState<Bbox | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
-  const center = geo.coords ?? WARSAW;
+  const center = geo.coords ?? DEFAULT_CENTER;
 
   const places = useQuery({
     queryKey: ['places', 'map', bbox],

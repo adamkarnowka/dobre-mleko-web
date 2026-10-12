@@ -14,7 +14,7 @@ import { PhotoPicker, type Uploaded } from '../components/PhotoPicker';
 import { EMPTY_SCORES, RatingInput, scoresComplete, type ScoresDraft } from '../components/RatingInput';
 import { PlaceSearch } from '../components/PlaceSearch';
 import { reverseGeocode, type GeoResult } from '../geocode';
-import { useGeo, WARSAW, type Coords } from '../geo';
+import { useGeo, DEFAULT_CENTER, type Coords } from '../geo';
 import { usePlace } from './PlacePage';
 
 type Draft = {
@@ -337,10 +337,10 @@ function PlaceFields({ draft, onChange }: { draft: Draft; onChange: Dispatch<Set
 
       <fieldset className="field">
         <legend className="label">Miejsce na mapie</legend>
-        <PlaceSearch near={draft.location ?? geo.coords ?? WARSAW} onPick={pick} />
+        <PlaceSearch near={draft.location ?? geo.coords ?? DEFAULT_CENTER} onPick={pick} />
         <p className="data muted">Albo kliknij mapę, żeby postawić pinezkę.</p>
         <MapView
-          center={draft.location ?? geo.coords ?? WARSAW}
+          center={draft.location ?? geo.coords ?? DEFAULT_CENTER}
           zoom={draft.location ? 17 : 13}
           pin={draft.location}
           onMapClick={pinAt}

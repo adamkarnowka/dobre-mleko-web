@@ -7,6 +7,9 @@ export default defineConfig({
   use: {
     baseURL: process.env.WEB_URL ?? 'http://localhost:5173',
     trace: 'retain-on-failure',
+    // The development fixtures are in Warsaw: be there, so maps open on them.
+    geolocation: { latitude: 52.2297, longitude: 21.0122 },
+    permissions: ['geolocation'],
   },
   projects: [
     { name: 'desktop', use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 900 } } },
