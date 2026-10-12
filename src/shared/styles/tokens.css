@@ -1,0 +1,33 @@
+/*
+ * Bauhaus Nowy — the Dobre Mleko design system (design canvas "Design system — Bauhaus Nowy").
+ * Radius 0, lines 1/2/3 pt, 8 px grid. One colour dominates a screen; colour never carries meaning alone —
+ * always with a shape or a number.
+ */
+:root {
+  --red: #d7301f;
+  --blue: #1d4fa0;
+  --yellow: #f2b900;
+  --ink: #141414;
+  --paper: #f1ece2;
+  --surface: #faf7f1;
+  --muted: #5e5a53;
+  --on-color: #faf7f1;
+
+  --line-1: 1px solid var(--ink);
+  --line-2: 2px solid var(--ink);
+  --line-3: 3px solid var(--ink);
+
+  --sans: 'Jost', 'Futura', 'Avenir Next', system-ui, sans-serif;
+  --mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+
+  --content: 1120px;
+  --tap: 44px;
+}

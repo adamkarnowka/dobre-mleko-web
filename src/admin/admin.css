@@ -1,0 +1,165 @@
+.admin-main {
+  max-width: var(--content);
+  margin: 0 auto;
+  padding: 32px 24px 64px;
+}
+
+.admin-gate {
+  max-width: 520px;
+  margin: 48px auto;
+  padding: 40px;
+}
+
+.admin-gate .display {
+  margin-bottom: var(--space-5);
+}
+
+/* People */
+.add-person {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.add-person .field {
+  min-width: 140px;
+}
+
+.add-person .grow {
+  flex: 1 1 220px;
+}
+
+.table-wrap {
+  /* Contains the absolutely positioned visually-hidden header, which would otherwise widen the page. */
+  position: relative;
+  overflow-x: auto;
+}
+
+table.people {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 760px;
+}
+
+.people th {
+  text-align: left;
+  font: 500 12px/1.4 var(--mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 12px 16px;
+  border-bottom: var(--line-2);
+}
+
+.people td {
+  padding: 12px 16px;
+  border-bottom: var(--line-1);
+  vertical-align: middle;
+}
+
+.people tr:last-child td {
+  border-bottom: 0;
+}
+
+.person {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.person-name {
+  font-weight: 700;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.person-email {
+  font: 400 13px/1.4 var(--mono);
+  color: var(--muted);
+  word-break: break-all;
+}
+
+.badge-env {
+  background: var(--yellow);
+}
+
+.badge-pending {
+  color: var(--muted);
+  border-color: var(--muted);
+}
+
+.people select {
+  min-height: 36px;
+  padding: 4px 8px;
+  width: auto;
+}
+
+.people .note-input {
+  min-height: 36px;
+  padding: 4px 8px;
+  border-width: 1px;
+}
+
+/* Settings */
+.settings {
+  display: grid;
+  gap: 16px;
+}
+
+.setting {
+  display: grid;
+  grid-template-columns: 1fr 260px;
+  gap: 24px;
+  padding: 20px 24px;
+}
+
+.setting h2 {
+  font: 700 20px/1.2 var(--sans);
+  margin: 0 0 4px;
+}
+
+.setting h2 label {
+  font: inherit;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.setting-meta .changed {
+  color: var(--blue);
+  font-weight: 500;
+}
+
+.setting-control {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.setting-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.setting-actions .btn {
+  flex: 1;
+}
+
+@media (max-width: 720px) {
+  .admin-main {
+    padding: 16px 16px 48px;
+  }
+
+  .admin-gate {
+    padding: 24px;
+    margin: 16px;
+  }
+
+  .setting {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}

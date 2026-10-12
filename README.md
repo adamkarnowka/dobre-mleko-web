@@ -1,1 +1,96 @@
 # dobre-mleko-web
+
+The web version of **Dobre Mleko** (place ratings, only from friends) and its **admin dashboard**, in one Vite
+build that shares the design system ("Bauhaus Nowy"), the API client and the sign-in.
+
+React 19 · TypeScript · Vite · React Router · TanStack Query · openapi-fetch · MapLibre (OpenFreeMap tiles).
+The API is [dobre-mleko-be](https://github.com/mwalczak/dobre-mleko-be)
+([API docs](https://mwalczak.github.io/dobre-mleko-be/)).
+
+| Path                       | What                                                                       |
+| -------------------------- | -------------------------------------------------------------------------- |
+| `/`                        | Odkrywaj: search, sort and filter places (filters live in the URL)         |
+| `/map`                     | Every place in view as a category-shaped marker                            |
+| `/places/:id`              | A place: photos, scores per criterion, gold star, save, navigate, comments |
+| `/places/:id/rate`         | Rate with the four criteria and at least one photo                         |
+| `/add`, `/places/:id/edit` | Add or edit a place, with its location picked on a map                     |
+| `/stats`, `/me`            | Network and personal stats; profile, avatar, saved places, my ratings      |
+| `/admin/`                  | Admin dashboard: the whitelist (Ludzie) and runtime settings (Ustawienia)  |
+
+Signed-out visitors see the manifest and the sign-in; first sign-in asks for a profile. The dashboard is only for
+admins (others see "Brak dostępu"). Both use the same session (one token in `localStorage`), so signing in to one
+signs in to the other.
+
+## Run locally
+
+Start Postgres and the API with fixtures and the development sign-in (in `dobre-mleko-be`, see its README):
+
+```sh
+cp .env.example .env    # has DEV_LOGIN=true
+npm install
+npm run seed            # 10 members, 100 Warsaw places
+npm run dev             # http://localhost:8080
+```
+
+Then here:
+
+```sh
+npm ci
+npm run dev          # http://localhost:5173, admin at http://localhost:5173/admin/
+```
+
+Sign in by e-mail as any seeded user, e.g. `kuba@example.com`, or `marta@example.com` (an admin). The dev server
+proxies `/api/*` (prefix stripped) and `/files/*` to `API_URL` (default `http://localhost:8080`), the same way
+nginx does in production, so the app always calls its own origin.
+
+| Script              |                                                                                                                                 |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `npm run dev`       | Dev server with the API proxy                                                                                                   |
+| `npm run build`     | Typecheck and build both pages into `dist/`                                                                                     |
+| `npm run preview`   | Serve `dist/` on :4173 (with the proxy)                                                                                         |
+| `npm test`          | Unit tests (vitest)                                                                                                             |
+| `npm run test:e2e`  | Playwright smoke tests, desktop and phone (needs the seeded API with `DEV_LOGIN`; starts `npm run dev` unless `WEB_URL` is set) |
+| `npm run api:types` | Regenerate `src/shared/api-schema.d.ts` from the published OpenAPI document (`API_SPEC=<path or URL>` for another one)          |
+| `npm run format`    | Prettier                                                                                                                        |
+
+The e2e tests change data (they add a place and ratings): run `npm run seed -- --reset` in the API to start over.
+
+### Environment
+
+| Variable         | When         |                                                                                        |
+| ---------------- | ------------ | -------------------------------------------------------------------------------------- |
+| `API_URL`        | dev, preview | Where the proxy sends `/api` and `/files` (default `http://localhost:8080`)            |
+| `VITE_MAP_STYLE` | build        | MapLibre style URL (default OpenFreeMap Positron); add its hosts to `MAP_ORIGINS`      |
+| `API_UPSTREAM`   | container    | The API for nginx (default `http://api.dobre-mleko.svc.cluster.local`)                 |
+| `MAP_ORIGINS`    | container    | Map hosts allowed by the CSP's `connect-src` (default `https://tiles.openfreemap.org`) |
+
+## Layout
+
+```
+index.html, admin/index.html   the two pages (Vite inputs)
+src/
+  shared/          API client (typed from the OpenAPI document), session, formatting, categories and their
+                   Bauhaus shapes, photo resizing + blurhash, design tokens and base styles, shared components
+  app/             the web app: Shell (sign-in, onboarding, navigation), pages, components (map, rating input…)
+  admin/           the dashboard: people and settings
+nginx/             nginx config template for the container
+e2e/               Playwright smoke tests
+```
+
+Photos are resized in the browser to at most 2048 px (JPEG) with a blurhash before upload, like the iOS app. The
+map library (≈1 MB) is loaded only on the pages that show a map.
+
+## Deploy
+
+Same setup as the API: CI (`ci.yml`) runs the format check, typecheck, unit tests and build on every push and pull
+request. When it passes on `main`, `deploy.yml` builds the image (nginx serving `dist/`), pushes it to GHCR and
+applies `k8s.yaml` on the k3s server over SSH: a `web` Deployment, Service and Traefik ingress with a cert-manager
+certificate, in the API's `dobre-mleko` namespace. nginx proxies `/api/*` and `/files/*` to the `api` service
+inside the cluster, so the browser sees one origin; it also sets the CSP, long caching for hashed assets and the
+fallbacks to `index.html` and `admin/index.html` for client-side routes.
+
+- Repository secrets: `VPS_HOST`, `VPS_SSH_KEY` (the same as the API's).
+- Repository variable: `WEB_HOST`, the web app's domain, with a DNS record pointing at the server.
+- Google sign-in: the API's `GOOGLE_WEB_CLIENT_ID` must list `https://<WEB_HOST>` as an authorised JavaScript
+  origin.
+- After the first run, make the GHCR package public or add an image pull secret.

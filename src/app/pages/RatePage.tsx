@@ -1,0 +1,133 @@
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import { api, unwrap, type PlaceDetail } from '../../shared/api';
+import { CATEGORY } from '../../shared/categories';
+import { PhotoImage } from '../../shared/components/PhotoImage';
+import { useToast } from '../../shared/components/Toast';
+import { useMe, useMeta } from '../../shared/session';
+import { PhotoPicker, type Uploaded } from '../components/PhotoPicker';
+import { EMPTY_SCORES, RatingInput, scoresComplete, type ScoresDraft } from '../components/RatingInput';
+import { usePlace } from './PlacePage';
+
+export function RatePage() {
+  const { id = '' } = useParams();
+  const place = usePlace(id);
+  if (place.isLoading) return <p className="page label">Ładowanie…</p>;
+  if (!place.data) return <p className="page notice">Nie ma takiego miejsca.</p>;
+  return <Rate p={place.data} />;
+}
+
+function Rate({ p }: { p: PlaceDetail }) {
+  const me = useMe().data;
+  const meta = useMeta().data;
+  const toast = useToast();
+  const navigate = useNavigate();
+  const client = useQueryClient();
+  const [scores, setScores] = useState<ScoresDraft>(p.my_scores ?? EMPTY_SCORES);
+  const [photos, setPhotos] = useState<Uploaded[]>([]);
+  const myPhotos = p.photos.filter((ph) => ph.uploaded_by === me?.id);
+  const max = (meta?.max_photos_per_rating ?? 6) - myPhotos.length;
+  const hasPhoto = myPhotos.length + photos.length > 0;
+  const path = { params: { path: { id: p.id } } };
+
+  const done = async (message: string) => {
+    toast.ok(message);
+    await Promise.all([
+      client.invalidateQueries({ queryKey: ['place', p.id] }),
+      client.invalidateQueries({ queryKey: ['places'] }),
+    ]);
+    navigate(`/places/${p.id}`);
+  };
+  const save = useMutation({
+    mutationFn: () =>
+      unwrap(
+        api.PUT('/places/{id}/rating', {
+          ...path,
+          body: {
+            vibe: scores.vibe!,
+            offer: scores.offer!,
+            service: scores.service,
+            value: scores.value,
+            photo_ids: photos.map((x) => x.id),
+          },
+        }),
+      ),
+    onSuccess: () => done('Zapisano ocenę.'),
+    onError: toast.fail,
+  });
+  const remove = useMutation({
+    mutationFn: () => unwrap(api.DELETE('/places/{id}/rating', path)),
+    onSuccess: () => done('Usunięto ocenę i jej zdjęcia.'),
+    onError: toast.fail,
+  });
+  const removePhoto = useMutation({
+    mutationFn: (photoId: string) => unwrap(api.DELETE('/photos/{id}', { params: { path: { id: photoId } } })),
+    onSuccess: () => client.invalidateQueries({ queryKey: ['place', p.id] }),
+    onError: toast.fail,
+  });
+
+  return (
+    <form
+      className="page narrow rate"
+      onSubmit={(e) => {
+        e.preventDefault();
+        save.mutate();
+      }}
+    >
+      <header className="page-head">
+        <p className="label">Twoja ocena · {CATEGORY[p.category_id].label}</p>
+        <h1 className="display">{p.name}</h1>
+      </header>
+
+      <RatingInput value={scores} onChange={setScores} />
+
+      <section className="place-section">
+        <h2 className="label">Zdjęcia</h2>
+        {myPhotos.length > 0 && (
+          <div className="photo-picker-grid">
+            {myPhotos.map((ph) => (
+              <div key={ph.id} className="photo-picker-item">
+                <PhotoImage photo={ph} thumb alt="" />
+                <button
+                  type="button"
+                  className="btn btn-small photo-remove"
+                  aria-label="Usuń zdjęcie"
+                  disabled={myPhotos.length + photos.length <= 1 && !!p.my_scores}
+                  title={myPhotos.length + photos.length <= 1 ? 'Ocena musi mieć co najmniej jedno zdjęcie' : undefined}
+                  onClick={() => removePhoto.mutate(ph.id)}
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+        <PhotoPicker value={photos} onChange={setPhotos} max={Math.max(0, max)} required />
+      </section>
+
+      <div className="form-actions">
+        <button
+          type="submit"
+          className="btn btn-primary"
+          disabled={!scoresComplete(scores) || !hasPhoto || save.isPending}
+        >
+          Zapisz ocenę
+        </button>
+        <Link to={`/places/${p.id}`} className="btn btn-secondary">
+          Anuluj
+        </Link>
+        {p.my_scores && (
+          <button
+            type="button"
+            className="btn btn-danger"
+            onClick={() => confirm('Usunąć Twoją ocenę razem z jej zdjęciami?') && remove.mutate()}
+          >
+            Usuń ocenę
+          </button>
+        )}
+      </div>
+      {!hasPhoto && <p className="data muted">Dodaj co najmniej jedno zdjęcie.</p>}
+    </form>
+  );
+}

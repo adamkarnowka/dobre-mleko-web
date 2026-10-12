@@ -1,0 +1,72 @@
+# Rendered by the nginx image's entrypoint (envsubst) at start-up.
+# The browser talks only to this host: /api/* and /files/* are proxied to the API, so photos'
+# signed URLs work as-is and no CORS is needed.
+
+server {
+    listen 8080;
+    server_name _;
+    root /usr/share/nginx/html;
+    server_tokens off;
+
+    # The largest photo the API accepts (the max_photo_bytes ceiling is 25 MB) plus form overhead.
+    client_max_body_size 26m;
+
+    # Resolve the API's name per request (via a variable), so nginx starts even before the API exists.
+    resolver ${NGINX_LOCAL_RESOLVERS} valid=30s ipv6=off;
+    set $api ${API_UPSTREAM};
+
+    # A types block replaces the inherited one: keep the standard map and add .mjs (the map's worker).
+    include /etc/nginx/mime.types;
+    types {
+        application/javascript mjs;
+    }
+
+    gzip on;
+    gzip_types text/css application/javascript application/json image/svg+xml;
+
+    add_header Cache-Control no-cache always;
+    add_header X-Content-Type-Options nosniff always;
+    add_header Referrer-Policy strict-origin-when-cross-origin always;
+    # Google sign-in (GSI) needs its script, style, frame and endpoints; the map needs its tile server.
+    add_header Content-Security-Policy "default-src 'self'; script-src 'self' https://accounts.google.com/gsi/client; style-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/style; img-src 'self' data: blob: https:; font-src 'self'; connect-src 'self' ${MAP_ORIGINS} https://accounts.google.com/gsi/; worker-src 'self' blob:; frame-src https://accounts.google.com/gsi/; frame-ancestors 'none'; base-uri 'none'; form-action 'self'" always;
+
+    location /api/ {
+        rewrite ^/api/(.*)$ /$1 break;
+        proxy_pass $api;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_request_buffering off;
+        # Any add_header here replaces the server-level ones: the API sets its own caching.
+        add_header X-Content-Type-Options nosniff always;
+    }
+
+    location /files/ {
+        proxy_pass $api;
+        add_header X-Content-Type-Options nosniff always;
+    }
+
+    # Hashed file names: cache forever (no `always`, so a 404 is not cached).
+    location /assets/ {
+        try_files $uri =404;
+        add_header Cache-Control "public, max-age=31536000, immutable";
+        add_header X-Content-Type-Options nosniff always;
+    }
+
+    location = /healthz {
+        access_log off;
+        default_type text/plain;
+        return 200 "ok\n";
+    }
+
+    location = /admin {
+        return 301 /admin/;
+    }
+
+    location /admin/ {
+        try_files $uri /admin/index.html;
+    }
+
+    location / {
+        try_files $uri /index.html;
+    }
+}
