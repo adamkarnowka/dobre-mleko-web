@@ -1,12 +1,14 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { api, unwrap, type Category, type PlaceDetail } from '../../shared/api';
+import { api, unwrap, type CardStyle, type Category, type PlaceDetail } from '../../shared/api';
+import { DEFAULT_CARD_STYLE } from '../../shared/cardStyle';
 import { CATEGORY, CATEGORY_IDS, STATUS_LABEL } from '../../shared/categories';
 import { CategoryMark } from '../../shared/components/CategoryMark';
 import { useToast } from '../../shared/components/Toast';
 import { PRICE } from '../../shared/format';
 import { useMeta } from '../../shared/session';
+import { CardStyleFields } from '../components/CardStyleFields';
 import { MapView } from '../components/MapView';
 import { PhotoPicker, type Uploaded } from '../components/PhotoPicker';
 import { EMPTY_SCORES, RatingInput, scoresComplete, type ScoresDraft } from '../components/RatingInput';
@@ -22,6 +24,7 @@ type Draft = {
   price: number | null;
   tags: string;
   status: PlaceDetail['status'];
+  style: CardStyle;
 };
 
 const fromPlace = (p: PlaceDetail): Draft => ({
@@ -33,6 +36,7 @@ const fromPlace = (p: PlaceDetail): Draft => ({
   price: p.price_level,
   tags: p.tags.join(', '),
   status: p.status,
+  style: p.card_style,
 });
 
 const EMPTY: Draft = {
@@ -44,6 +48,7 @@ const EMPTY: Draft = {
   price: null,
   tags: '',
   status: 'active',
+  style: DEFAULT_CARD_STYLE,
 };
 
 const parseTags = (s: string) =>
@@ -85,6 +90,7 @@ export function AddPlacePage() {
             rating: { vibe: scores.vibe!, offer: scores.offer!, service: scores.service, value: scores.value },
             photo_ids: photos.map((x) => x.id),
             gold_star: goldStar,
+            card_style: draft.style,
           },
         }),
       ),
@@ -117,6 +123,13 @@ export function AddPlacePage() {
         <h2 className="label">Zdjęcia</h2>
         <PhotoPicker value={photos} onChange={setPhotos} max={meta?.max_photos_per_rating ?? 6} required />
       </section>
+      <CardStyleFields
+        value={draft.style}
+        onChange={(style) => setDraft({ ...draft, style })}
+        category={draft.category}
+        name={draft.name}
+        photo={photos[0] ? { url: photos[0].preview, thumb_url: photos[0].preview, blurhash: null } : null}
+      />
       <label className="check">
         <input type="checkbox" checked={goldStar} onChange={(e) => setGoldStar(e.target.checked)} />
         <span>
@@ -170,6 +183,7 @@ function EditPlace({ p }: { p: PlaceDetail }) {
             price_level: draft.price,
             tags: parseTags(draft.tags),
             status: draft.status,
+            card_style: draft.style,
           },
         }),
       ),
@@ -203,6 +217,13 @@ function EditPlace({ p }: { p: PlaceDetail }) {
         <h1 className="display">{p.name}</h1>
       </header>
       <PlaceFields draft={draft} onChange={setDraft} />
+      <CardStyleFields
+        value={draft.style}
+        onChange={(style) => setDraft({ ...draft, style })}
+        category={draft.category}
+        name={draft.name}
+        photo={p.cover_photo}
+      />
       <fieldset className="field">
         <legend className="label">Status</legend>
         <div className="chips">

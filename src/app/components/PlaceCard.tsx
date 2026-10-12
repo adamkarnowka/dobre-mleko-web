@@ -2,24 +2,32 @@ import { Link } from 'react-router-dom';
 import type { PlaceSummary } from '../../shared/api';
 import { CATEGORY } from '../../shared/categories';
 import { CategoryMark } from '../../shared/components/CategoryMark';
-import { PhotoImage } from '../../shared/components/PhotoImage';
 import { count, distance, rating } from '../../shared/format';
+import { CardArt } from './CardArt';
 
-/** A place in a list: cover photo, rank, name, score, gold stars, distance, category and author. */
-export function PlaceCard({ place: p, rank, compact }: { place: PlaceSummary; rank?: number; compact?: boolean }) {
+/** A place in a list, in its author's card style: picture, rank, name, score, gold stars, distance, category, author. */
+export function PlaceCard({
+  place: p,
+  rank,
+  index,
+  compact,
+}: {
+  place: PlaceSummary;
+  rank?: number;
+  /** Position in the list, for the rotating (`auto`) layout. */
+  index?: number;
+  compact?: boolean;
+}) {
   const dist = distance(p.distance_m);
   return (
     <Link to={`/places/${p.id}`} className={`place-card panel${compact ? ' compact' : ''}`}>
-      <div className="place-card-photo">
-        {p.cover_photo ? (
-          <PhotoImage photo={p.cover_photo} thumb alt="" />
-        ) : (
-          <div className="photo photo-empty">
-            <CategoryMark category={p.category_id} size={56} />
-          </div>
-        )}
-        {rank != null && <span className="place-rank">{String(rank).padStart(2, '0')}</span>}
-      </div>
+      <CardArt
+        category={p.category_id}
+        style={p.card_style}
+        photo={p.cover_photo}
+        position={index ?? p.id}
+        rank={rank}
+      />
       <div className="place-card-body">
         <h3 className="place-card-name">{p.name}</h3>
         <div className="place-card-score">

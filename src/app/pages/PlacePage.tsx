@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { api, unwrap, type Comment, type PlaceDetail } from '../../shared/api';
+import { cardColor, textOn } from '../../shared/cardStyle';
 import { CATEGORY, CRITERIA, STATUS_LABEL } from '../../shared/categories';
 import { Avatar } from '../../shared/components/Avatar';
 import { CategoryMark } from '../../shared/components/CategoryMark';
@@ -197,17 +198,21 @@ function Place({ p }: { p: PlaceDetail }) {
   );
 }
 
+/** The photos; the first one (the cover) wears the card's filter, the rest are originals. */
 function Gallery({ p }: { p: PlaceDetail }) {
   const [index, setIndex] = useState(0);
+  const color = cardColor(p.card_style, p.category_id);
+  const vars = { ['--card' as string]: color, ['--card-on' as string]: textOn(color) };
+  const effect = { filter: p.card_style.photo_filter, intensity: p.card_style.filter_intensity, color };
   if (!p.photos.length) {
     return (
-      <div className="gallery gallery-empty">
-        <CategoryMark category={p.category_id} size={96} />
+      <div className="gallery gallery-empty" style={vars}>
+        <CategoryMark category={p.category_id} size={96} color={textOn(color)} />
       </div>
     );
   }
   return (
-    <div className="gallery">
+    <div className="gallery" style={vars}>
       <div
         className="gallery-track"
         onScroll={(e) => {
@@ -216,7 +221,13 @@ function Gallery({ p }: { p: PlaceDetail }) {
         }}
       >
         {p.photos.map((photo, i) => (
-          <PhotoImage key={photo.id} photo={photo} alt={`${p.name}, zdjęcie ${i + 1}`} className="gallery-item" />
+          <PhotoImage
+            key={photo.id}
+            photo={photo}
+            alt={`${p.name}, zdjęcie ${i + 1}`}
+            className="gallery-item"
+            effect={i === 0 ? effect : undefined}
+          />
         ))}
       </div>
       <span className="gallery-count data">

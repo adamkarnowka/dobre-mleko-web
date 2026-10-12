@@ -646,6 +646,43 @@ export interface components {
       width: number | null;
       height: number | null;
     };
+    /** @description How the place is presented in the app, chosen by its author */
+    CardStyle: {
+      /**
+       * @description List card: a = photo full width, b = poster without photo, c = photo in a circle; auto = app rotates
+       * @enum {string}
+       */
+      layout: 'auto' | 'a' | 'b' | 'c';
+      /**
+       * @description Filter on the list card and the main photo
+       * @enum {string}
+       */
+      photo_filter: 'none' | 'duotone' | 'halftone' | 'engraving' | 'riso';
+      /** @description Filter strength in percent */
+      filter_intensity: number;
+      /**
+       * @description The card's main colour; null = the category's colour
+       * @enum {string|null}
+       */
+      color:
+        | 'red'
+        | 'blue'
+        | 'yellow'
+        | 'ink'
+        | 'orange'
+        | 'pink'
+        | 'green'
+        | 'teal'
+        | 'sky'
+        | 'navy'
+        | 'violet'
+        | 'ochre'
+        | 'brick'
+        | 'olive'
+        | 'sand'
+        | 'stone'
+        | null;
+    };
     PlaceSummary: {
       /** Format: uuid */
       id: string;
@@ -677,6 +714,7 @@ export interface components {
       /** @description My overall rating, null if I have not rated it */
       my_rating: number | null;
       is_saved: boolean;
+      card_style: components['schemas']['CardStyle'];
       /** Format: date-time */
       created_at: string;
       /** Format: date-time */
@@ -750,6 +788,7 @@ export interface components {
       /** @description My overall rating, null if I have not rated it */
       my_rating: number | null;
       is_saved: boolean;
+      card_style: components['schemas']['CardStyle'];
       /** Format: date-time */
       created_at: string;
       /** Format: date-time */
@@ -1505,6 +1544,46 @@ export interface operations {
             | null;
           /** @default null */
           google_place_id?: string | null;
+          /**
+           * @description Send only the parts to change
+           * @default {}
+           */
+          card_style?: {
+            /**
+             * @description List card: a = photo full width, b = poster without photo, c = photo in a circle; auto = app rotates
+             * @enum {string}
+             */
+            layout?: 'auto' | 'a' | 'b' | 'c';
+            /**
+             * @description Filter on the list card and the main photo
+             * @enum {string}
+             */
+            photo_filter?: 'none' | 'duotone' | 'halftone' | 'engraving' | 'riso';
+            /** @description Filter strength in percent */
+            filter_intensity?: number;
+            /**
+             * @description The card's main colour; null = the category's colour
+             * @enum {string|null}
+             */
+            color?:
+              | 'red'
+              | 'blue'
+              | 'yellow'
+              | 'ink'
+              | 'orange'
+              | 'pink'
+              | 'green'
+              | 'teal'
+              | 'sky'
+              | 'navy'
+              | 'violet'
+              | 'ochre'
+              | 'brick'
+              | 'olive'
+              | 'sand'
+              | 'stone'
+              | null;
+          };
           /** @description The author's own rating, required */
           rating: {
             vibe: number;
@@ -1656,6 +1735,43 @@ export interface operations {
               }[]
             | null;
           google_place_id?: string | null;
+          /** @description Send only the parts to change */
+          card_style?: {
+            /**
+             * @description List card: a = photo full width, b = poster without photo, c = photo in a circle; auto = app rotates
+             * @enum {string}
+             */
+            layout?: 'auto' | 'a' | 'b' | 'c';
+            /**
+             * @description Filter on the list card and the main photo
+             * @enum {string}
+             */
+            photo_filter?: 'none' | 'duotone' | 'halftone' | 'engraving' | 'riso';
+            /** @description Filter strength in percent */
+            filter_intensity?: number;
+            /**
+             * @description The card's main colour; null = the category's colour
+             * @enum {string|null}
+             */
+            color?:
+              | 'red'
+              | 'blue'
+              | 'yellow'
+              | 'ink'
+              | 'orange'
+              | 'pink'
+              | 'green'
+              | 'teal'
+              | 'sky'
+              | 'navy'
+              | 'violet'
+              | 'ochre'
+              | 'brick'
+              | 'olive'
+              | 'sand'
+              | 'stone'
+              | null;
+          };
           location?: {
             lat: number;
             lng: number;

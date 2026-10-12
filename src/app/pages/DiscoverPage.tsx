@@ -209,7 +209,12 @@ export function DiscoverPage() {
         <>
           <div className="place-grid">
             {items.map((p, i) => (
-              <PlaceCard key={p.id} place={p} rank={sort === 'best' && !params.get('q') ? i + 1 : undefined} />
+              <PlaceCard
+                key={p.id}
+                place={p}
+                index={i}
+                rank={sort === 'best' && !params.get('q') ? i + 1 : undefined}
+              />
             ))}
           </div>
           {list.hasNextPage && (

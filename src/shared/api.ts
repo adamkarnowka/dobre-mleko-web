@@ -20,6 +20,7 @@ export type MyStats = Schemas['MyStats'];
 export type AllowedEmail = Schemas['AllowedEmail'];
 export type Setting = Schemas['Setting'];
 export type Category = PlaceSummary['category_id'];
+export type CardStyle = Schemas['CardStyle'];
 
 export const API_BASE = '/api';
 

@@ -18,9 +18,13 @@ export const CATEGORY: Record<Category, { label: string; color: string; shape: S
 
 export const CATEGORY_IDS = Object.keys(CATEGORY) as Category[];
 
-/** SVG markup (44×44 viewBox) of a category's shape; constant data, used by CategoryMark and map markers. */
-export function shapeMarkup(category: Category): string {
-  const { shape, color: c } = CATEGORY[category];
+/**
+ * SVG markup (44×44 viewBox) of a category's shape, in its colour or `color`; constant data, used by CategoryMark,
+ * map markers and poster cards.
+ */
+export function shapeMarkup(category: Category, color?: string): string {
+  const { shape } = CATEGORY[category];
+  const c = color ?? CATEGORY[category].color;
   switch (shape) {
     case 'circle':
       return `<circle cx="22" cy="22" r="22" fill="${c}"/>`;
@@ -31,7 +35,9 @@ export function shapeMarkup(category: Category): string {
     case 'triangle-down':
       return `<polygon points="0,0 44,0 22,44" fill="${c}"/>`;
     case 'ring':
-      return `<circle cx="22" cy="22" r="21" fill="${c}" stroke="#141414" stroke-width="2"/>`;
+      return color
+        ? `<circle cx="22" cy="22" r="18" fill="none" stroke="${c}" stroke-width="8"/>`
+        : `<circle cx="22" cy="22" r="21" fill="${c}" stroke="#141414" stroke-width="2"/>`;
     case 'square':
       return `<rect width="44" height="44" fill="${c}"/>`;
     case 'quarter':

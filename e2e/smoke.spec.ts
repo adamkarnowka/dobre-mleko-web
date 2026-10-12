@@ -104,10 +104,39 @@ test('add a place with rating, photo and map pin', async ({ page }) => {
     .locator('input[type=file]')
     .setInputFiles({ name: 'p.jpg', mimeType: 'image/jpeg', buffer: await jpeg(page) });
   await expect(page.locator('.photo-picker-item img')).toHaveCount(1);
+
+  // Card style, with a live preview.
+  await page.getByRole('button', { name: 'Koło' }).click();
+  await page.getByRole('button', { name: 'Morski' }).click();
+  await page.getByRole('button', { name: 'Raster' }).click();
+  const preview = page.locator('.card-style-preview');
+  await expect(preview.locator('[data-layout="c"]')).toBeVisible();
+  await expect(preview.locator('.fx-halftone')).toBeVisible();
+
   await page.getByRole('button', { name: 'Dodaj miejsce' }).click();
 
   await expect(page.locator('.place-name')).toHaveText(name);
   await expect(page.getByText('Test end-to-end.')).toBeVisible();
+  await expect(page.locator('.gallery-item').first().locator('.fx-halftone')).toBeVisible();
+
+  await page.goto(`/?q=${encodeURIComponent(name)}`);
+  await expect(page.locator('.place-card [data-layout="c"] .fx-halftone')).toBeVisible();
+});
+
+test('change a place card style', async ({ page }) => {
+  await signIn(page, 'marta@example.com', '/?sort=newest');
+  await page.locator('.place-card').first().click();
+  const name = (await page.locator('.place-name').textContent())!;
+  await page.getByRole('link', { name: 'Edytuj' }).click();
+  await page.getByRole('button', { name: 'Plakat' }).click();
+  await page.getByRole('button', { name: 'Granatowy' }).click();
+  await page.getByRole('button', { name: 'Zapisz', exact: true }).click();
+  await expect(page.locator('.place-name')).toHaveText(name);
+
+  await page.goto(`/?q=${encodeURIComponent(name)}`);
+  const art = page.locator('.place-card').first().locator('[data-layout="b"]');
+  await expect(art).toBeVisible();
+  await expect(art).toHaveCSS('background-color', 'rgb(23, 43, 77)');
 });
 
 test('the map shows places', async ({ page }) => {

@@ -13,7 +13,7 @@ The API is [dobre-mleko-be](https://github.com/mwalczak/dobre-mleko-be)
 | `/map`                     | Every place in view as a category-shaped marker                            |
 | `/places/:id`              | A place: photos, scores per criterion, gold star, save, navigate, comments |
 | `/places/:id/rate`         | Rate with the four criteria and at least one photo                         |
-| `/add`, `/places/:id/edit` | Add or edit a place, with its location picked on a map                     |
+| `/add`, `/places/:id/edit` | Add or edit a place, with its location picked on a map and its card style  |
 | `/stats`, `/me`            | Network and personal stats; profile, avatar, saved places, my ratings      |
 | `/admin/`                  | Admin dashboard: the whitelist (Ludzie) and runtime settings (Ustawienia)  |
 
@@ -76,6 +76,13 @@ src/
 nginx/             nginx config template for the container
 e2e/               Playwright smoke tests
 ```
+
+Each place has a **card style** chosen by its author (`card_style` in the API): the list card's layout (a = photo,
+b = poster, c = photo in a circle, or auto, which rotates them down the list), its colour (one of 16, or the
+category's), and a photo filter (duotone, halftone, engraving, riso) with its strength. The filter shows on the list
+card and the place's main photo; the gallery keeps the originals. The colours and filters are in
+`src/shared/cardStyle.ts` and `src/shared/components/PhotoEffect.tsx` (SVG and CSS filters drawn over the photo,
+their opacity being the strength).
 
 Photos are resized in the browser to at most 2048 px (JPEG) with a blurhash before upload, like the iOS app. The
 map library (≈1 MB) is loaded only on the pages that show a map.
