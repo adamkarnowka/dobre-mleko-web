@@ -3,13 +3,15 @@ import { useState } from 'react';
 import { api, unwrap, type Schemas } from '../shared/api';
 import { CARD_COLOR_IDS, CARD_COLORS } from '../shared/cardStyle';
 import { SHAPES, type Shape } from '../shared/categories';
-import { ShapeIcon } from '../shared/components/CategoryMark';
+import { IconMark, ShapeIcon } from '../shared/components/CategoryMark';
 import { useToast } from '../shared/components/Toast';
 import { ago, count } from '../shared/format';
+import { ICONS_KEY, useIcons } from './Icons';
 import { ID_PATTERN, slug } from './slug';
 
 type AdminCategory = Schemas['AdminCategory'];
-type Draft = { label: string; color: string; shape: Shape };
+/** `icon`: an id from the icon library, or null (the shape is drawn). */
+type Draft = { label: string; color: string; shape: Shape; icon: string | null };
 
 const KEY = ['admin', 'categories'];
 const PLACES: [string, string, string] = ['miejsce', 'miejsca', 'miejsc'];
@@ -60,8 +62,9 @@ export function Categories() {
 /** Admin list and /meta (the app's categories) both change. */
 function useRefresh() {
   const client = useQueryClient();
+  // Icons too: their number of categories changes.
   return () =>
-    Promise.all([client.invalidateQueries({ queryKey: KEY }), client.invalidateQueries({ queryKey: ['meta'] })]).then(
+    Promise.all([KEY, ICONS_KEY, ['meta']].map((queryKey) => client.invalidateQueries({ queryKey }))).then(
       () => undefined,
     );
 }
@@ -69,7 +72,7 @@ function useRefresh() {
 function AddCategory() {
   const refresh = useRefresh();
   const toast = useToast();
-  const [draft, setDraft] = useState<Draft>({ label: '', color: CARD_COLORS.teal.hex, shape: 'circle' });
+  const [draft, setDraft] = useState<Draft>({ label: '', color: CARD_COLORS.teal.hex, shape: 'circle', icon: null });
   const [id, setId] = useState<string | null>(null); // null: follows the name
   const finalId = id ?? slug(draft.label);
   const add = useMutation({
@@ -146,7 +149,12 @@ function CategoryRow({
   const refresh = useRefresh();
   const toast = useToast();
   const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState<Draft>({ label: c.label, color: c.color, shape: c.shape });
+  const [draft, setDraft] = useState<Draft>({
+    label: c.label,
+    color: c.color,
+    shape: c.shape,
+    icon: c.icon?.id ?? null,
+  });
   const path = { params: { path: { id: c.id } } };
 
   const update = useMutation({
@@ -197,7 +205,11 @@ function CategoryRow({
             ↓
           </button>
         </div>
-        <ShapeIcon shape={c.shape} color={c.color} size={32} />
+        {c.icon ? (
+          <IconMark path={c.icon.path} color={c.color} size={32} />
+        ) : (
+          <ShapeIcon shape={c.shape} color={c.color} size={32} />
+        )}
         <div className="category-name">
           <strong>{c.label}</strong>
           <span className="data muted">
@@ -212,7 +224,7 @@ function CategoryRow({
             className="btn btn-small btn-secondary"
             aria-expanded={editing}
             onClick={() => {
-              setDraft({ label: c.label, color: c.color, shape: c.shape });
+              setDraft({ label: c.label, color: c.color, shape: c.shape, icon: c.icon?.id ?? null });
               setEditing(!editing);
             }}
           >
@@ -271,10 +283,18 @@ function CategoryRow({
   );
 }
 
-const pick = (d: Draft) => ({ color: d.color, shape: d.shape });
+const pick = (d: Draft) => ({ color: d.color, shape: d.shape, icon: d.icon });
 
-/** Colour (the design system's card palette) and shape, with a preview. */
+/** Colour (the design system's card palette), pictogram from the icon library and shape, with a preview. */
 function Appearance({ draft, onChange }: { draft: Draft; onChange: (d: Draft) => void }) {
+  const icons = useIcons().data?.items ?? [];
+  const iconPath = icons.find((i) => i.id === draft.icon)?.path;
+  const Mark = ({ size }: { size: number }) =>
+    iconPath ? (
+      <IconMark path={iconPath} color={draft.color} size={size} />
+    ) : (
+      <ShapeIcon shape={draft.shape} color={draft.color} size={size} />
+    );
   const inPalette = CARD_COLOR_IDS.some((c) => CARD_COLORS[c].hex === draft.color);
   return (
     <div className="category-appearance">
@@ -305,7 +325,34 @@ function Appearance({ draft, onChange }: { draft: Draft; onChange: (d: Draft) =>
         </div>
       </fieldset>
       <fieldset className="field">
-        <legend className="label">Kształt</legend>
+        <legend className="label">Ikona</legend>
+        <div className="icon-choices">
+          <button
+            type="button"
+            className="chip"
+            aria-pressed={draft.icon === null}
+            onClick={() => onChange({ ...draft, icon: null })}
+          >
+            Bez ikony
+          </button>
+          {icons.map((i) => (
+            <button
+              key={i.id}
+              type="button"
+              className="chip"
+              aria-pressed={draft.icon === i.id}
+              aria-label={i.label}
+              title={i.label}
+              onClick={() => onChange({ ...draft, icon: i.id })}
+            >
+              <IconMark path={i.path} color={draft.color} size={20} />
+            </button>
+          ))}
+        </div>
+        <span className="data muted">Bibliotekę ikon zmieniasz w zakładce Ikony.</span>
+      </fieldset>
+      <fieldset className="field">
+        <legend className="label">Kształt {iconPath && <span className="muted">(gdy brak ikony)</span>}</legend>
         <div className="chips">
           {SHAPES.map((s) => (
             <button
@@ -321,9 +368,9 @@ function Appearance({ draft, onChange }: { draft: Draft; onChange: (d: Draft) =>
         </div>
       </fieldset>
       <div className="category-preview" aria-label="Podgląd">
-        <ShapeIcon shape={draft.shape} color={draft.color} size={56} />
+        <Mark size={56} />
         <span className="chip">
-          <ShapeIcon shape={draft.shape} color={draft.color} size={14} /> {draft.label.trim() || 'Nazwa'}
+          <Mark size={14} /> {draft.label.trim() || 'Nazwa'}
         </span>
       </div>
     </div>

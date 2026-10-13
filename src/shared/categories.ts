@@ -1,9 +1,10 @@
 import type { Schemas } from './api';
 import { useMeta } from './session';
 
-/** Categories = shape + colour (design system). Colour never carries the meaning alone. */
+/** Categories = pictogram (or shape) + colour (design system). Colour never carries the meaning alone. */
 export type CategoryInfo = Schemas['Category'];
 export type Shape = CategoryInfo['shape'];
+export type CategoryIcon = Schemas['CategoryIcon'];
 
 export const SHAPES: { id: Shape; label: string }[] = [
   { id: 'circle', label: 'Koło' },
@@ -32,7 +33,7 @@ const BUILT_IN: CategoryInfo[] = (
     ['hotel', 'Hotel', '#141414', 'house'],
     ['other', 'Inne', '#141414', 'square'],
   ] as const
-).map(([id, label, color, shape], i) => ({ id, label, color, shape, position: i + 1, active: true }));
+).map(([id, label, color, shape], i) => ({ id, label, color, shape, icon: null, position: i + 1, active: true }));
 
 let list: CategoryInfo[] = BUILT_IN;
 let byId = new Map(list.map((c) => [c.id, c]));
@@ -46,7 +47,7 @@ export function setCategories(next: CategoryInfo[]): void {
 
 /** A category by id; an unknown id (deleted meanwhile) still gets a neutral mark. */
 export const categoryInfo = (id: string): CategoryInfo =>
-  byId.get(id) ?? { id, label: id, color: '#141414', shape: 'square', position: 999, active: false };
+  byId.get(id) ?? { id, label: id, color: '#141414', shape: 'square', icon: null, position: 999, active: false };
 
 /** Categories to offer (not retired), in order, plus any of `keep` (e.g. the current choice) even if retired. */
 export const categoryChoices = (keep: (string | null | undefined)[] = []): CategoryInfo[] =>
@@ -87,10 +88,38 @@ export function shapeSvg(shape: Shape, color: string, onColor = false): string {
   }
 }
 
-/** A category's mark, in its colour or `color` (a palette colour, e.g. on a coloured card). */
+/** SVG path data of an icon (the API checks it too): commands and numbers only, so it is safe inside markup. */
+export const ICON_PATH = /^[MmLlHhVvCcSsQqTtAaZz0-9eE.,+\-\s]+$/;
+
+/**
+ * SVG markup (44×44 viewBox) of an icon: its path on a 24×24 grid, scaled up, filled even-odd. `null` for path data
+ * that is not plain path commands (never markup from data).
+ */
+export function iconSvg(path: string, color: string): string | null {
+  if (!ICON_PATH.test(path)) return null;
+  const c = /^#[0-9A-Fa-f]{6}$/.test(color) ? color : '#141414';
+  return `<path d="${path}" fill="${c}" fill-rule="evenodd" transform="scale(${44 / 24})"/>`;
+}
+
+/** A category's mark — its pictogram, or its shape — in its colour or `color` (e.g. on a coloured card). */
 export function shapeMarkup(id: string, color?: string): string {
   const c = categoryInfo(id);
-  return shapeSvg(c.shape, color ?? c.color, !!color);
+  return (c.icon && iconSvg(c.icon.path, color ?? c.color)) ?? shapeSvg(c.shape, color ?? c.color, !!color);
+}
+
+/**
+ * Path data from what an admin pastes: a bare path, or a whole SVG (its `<path d>` values are joined). `grid` is false
+ * when the SVG declares a viewBox other than 0 0 24 24.
+ */
+export function pastedIconPath(text: string): { path: string; grid: boolean } {
+  const trimmed = text.trim();
+  if (!trimmed.startsWith('<')) return { path: trimmed.replace(/\s+/g, ' '), grid: true };
+  const viewBox = /viewBox\s*=\s*["']([^"']*)["']/i
+    .exec(trimmed)?.[1]
+    ?.trim()
+    .replace(/[\s,]+/g, ' ');
+  const paths = [...trimmed.matchAll(/\sd\s*=\s*["']([^"']*)["']/gi)].map((m) => m[1]!.trim());
+  return { path: paths.join(' ').replace(/\s+/g, ' '), grid: !viewBox || viewBox === '0 0 24 24' };
 }
 
 export const CRITERIA = [

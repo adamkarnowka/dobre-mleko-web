@@ -186,7 +186,7 @@ table.people {
 
 .category-appearance {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) minmax(0, 1fr) auto;
   gap: 16px;
   align-items: start;
 }
@@ -265,4 +265,59 @@ table.people {
   .category-appearance {
     grid-template-columns: 1fr;
   }
+}
+
+/* Icons ---------------------------------------------------------------------------------------------------- */
+.icon-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.icon-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+}
+
+.icon-card-previews,
+.icon-preview {
+  display: flex;
+  gap: 8px;
+}
+
+.icon-path {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.icon-path .grow {
+  flex: 1 1 320px;
+}
+
+.icon-path textarea {
+  width: 100%;
+  font-size: 12px;
+}
+
+/* The 24×24 grid behind the preview: what an icon is drawn on. */
+.icon-preview svg {
+  background-image:
+    linear-gradient(var(--paper) 0 0),
+    repeating-linear-gradient(0deg, transparent 0 11px, rgb(20 20 20 / 0.08) 11px 12px),
+    repeating-linear-gradient(90deg, transparent 0 11px, rgb(20 20 20 / 0.08) 11px 12px);
+  background-blend-mode: multiply;
+  border: var(--line-1);
+}
+
+.icon-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
 }
