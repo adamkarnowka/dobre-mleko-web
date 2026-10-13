@@ -564,7 +564,7 @@ export interface paths {
     put?: never;
     /**
      * Add a category
-     * @description Added at the end of the list, active. The id is permanent (places refer to it): lowercase letters, digits and `_`, 2–32 characters. 409 `category_exists` when the id or the name is taken.
+     * @description Added at the end of the list, active. The id is permanent (places refer to it): lowercase letters, digits and `_`, 2–32 characters. `icon`: an id from the icon library (optional). 409 `category_exists` when the id or the name is taken.
      */
     post: operations['postAdminCategories'];
     delete?: never;
@@ -592,7 +592,7 @@ export interface paths {
     head?: never;
     /**
      * Change a category
-     * @description Name, colour, shape, or `active`: retiring a category keeps its places but stops it being offered for new ones. 409 `category_exists`, `last_category`.
+     * @description Name, colour, shape, icon (null clears it), or `active`: retiring a category keeps its places but stops it being offered for new ones. 409 `category_exists`, `last_category`.
      */
     patch: operations['patchAdminCategoriesById'];
     trace?: never;
@@ -615,6 +615,54 @@ export interface paths {
     options?: never;
     head?: never;
     patch?: never;
+    trace?: never;
+  };
+  '/admin/icons': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Icons
+     * @description The icon library, by name, with the number of categories using each icon.
+     */
+    get: operations['getAdminIcons'];
+    put?: never;
+    /**
+     * Add an icon
+     * @description SVG path data on a 24×24 grid (the `d` attribute of a `<path>` in a `viewBox="0 0 24 24"` SVG), filled even-odd in the category colour — commands and numbers only. 422 `invalid_input` for anything else; 409 `icon_exists` when the id or the name is taken.
+     */
+    post: operations['postAdminIcons'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/admin/icons/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * Delete an icon
+     * @description Only an icon no category uses (409 `icon_in_use` with `categories`).
+     */
+    delete: operations['deleteAdminIconsById'];
+    options?: never;
+    head?: never;
+    /**
+     * Change an icon
+     * @description Name or path; categories using the icon show the new path. 409 `icon_exists`.
+     */
+    patch: operations['patchAdminIconsById'];
     trace?: never;
   };
 }
@@ -973,6 +1021,13 @@ export interface components {
         left: number;
       };
     };
+    /** @description A category's pictogram, managed by admins in the icon library. */
+    CategoryIcon: {
+      /** @description Icon id in the library */
+      id: string;
+      /** @description SVG path data (`d`) on a 24×24 grid (`viewBox="0 0 24 24"`), filled with the even-odd rule in the category's colour (holes are separate subpaths). Commands M L H V C S Q T A Z, absolute or relative. */
+      path: string;
+    };
     /** @description A place category, managed by admins. */
     Category: {
       /** @description Stable id, used as `category_id` everywhere */
@@ -982,10 +1037,12 @@ export interface components {
       /** @description Main colour, `#RRGGBB` */
       color: string;
       /**
-       * @description The category mark, drawn in `color` in a 44×44 box: `circle` (full circle), `half` (upper half disc sitting on the bottom edge), `triangle` (apex up), `triangle_down` (apex down), `ring` (circle in `color` with a 2 pt ink outline), `square`, `quarter` (quarter disc, square corner at bottom right), `house` (pentagon: square with a roof, eaves at 18/44).
+       * @description The category mark, drawn in `color` in a 44×44 box: `circle` (full circle), `half` (upper half disc sitting on the bottom edge), `triangle` (apex up), `triangle_down` (apex down), `ring` (circle in `color` with a 2 pt ink outline), `square`, `quarter` (quarter disc, square corner at bottom right), `house` (pentagon: square with a roof, eaves at 18/44). Drawn when the category has no icon.
        * @enum {string}
        */
       shape: 'circle' | 'half' | 'triangle' | 'triangle_down' | 'ring' | 'square' | 'quarter' | 'house';
+      /** @description The pictogram; null — draw `shape` */
+      icon: components['schemas']['CategoryIcon'] | null;
       /** @description Display order, ascending */
       position: number;
       /** @description False when retired: existing places keep it (still draw it), but do not offer it for new ones */
@@ -1072,10 +1129,12 @@ export interface components {
       /** @description Main colour, `#RRGGBB` */
       color: string;
       /**
-       * @description The category mark, drawn in `color` in a 44×44 box: `circle` (full circle), `half` (upper half disc sitting on the bottom edge), `triangle` (apex up), `triangle_down` (apex down), `ring` (circle in `color` with a 2 pt ink outline), `square`, `quarter` (quarter disc, square corner at bottom right), `house` (pentagon: square with a roof, eaves at 18/44).
+       * @description The category mark, drawn in `color` in a 44×44 box: `circle` (full circle), `half` (upper half disc sitting on the bottom edge), `triangle` (apex up), `triangle_down` (apex down), `ring` (circle in `color` with a 2 pt ink outline), `square`, `quarter` (quarter disc, square corner at bottom right), `house` (pentagon: square with a roof, eaves at 18/44). Drawn when the category has no icon.
        * @enum {string}
        */
       shape: 'circle' | 'half' | 'triangle' | 'triangle_down' | 'ring' | 'square' | 'quarter' | 'house';
+      /** @description The pictogram; null — draw `shape` */
+      icon: components['schemas']['CategoryIcon'] | null;
       /** @description Display order, ascending */
       position: number;
       /** @description False when retired: existing places keep it (still draw it), but do not offer it for new ones */
@@ -1089,6 +1148,26 @@ export interface components {
         id: string;
         display_name: string;
       } | null;
+    };
+    AdminIcon: {
+      /** @description Icon id in the library */
+      id: string;
+      /** @description SVG path data (`d`) on a 24×24 grid (`viewBox="0 0 24 24"`), filled with the even-odd rule in the category's colour (holes are separate subpaths). Commands M L H V C S Q T A Z, absolute or relative. */
+      path: string;
+      /** @description Polish name, e.g. in the icon picker */
+      label: string;
+      /** @description Categories using this icon */
+      categories: number;
+      /** Format: date-time */
+      updated_at: string;
+      updated_by: {
+        /** Format: uuid */
+        id: string;
+        display_name: string;
+      } | null;
+    };
+    AdminIconList: {
+      items: components['schemas']['AdminIcon'][];
     };
     AdminCategoryList: {
       items: components['schemas']['AdminCategory'][];
@@ -2632,6 +2711,8 @@ export interface operations {
           color: string;
           /** @enum {string} */
           shape: 'circle' | 'half' | 'triangle' | 'triangle_down' | 'ring' | 'square' | 'quarter' | 'house';
+          /** @description An icon id from the library (/admin/icons); null = none */
+          icon?: string | null;
         };
       };
     };
@@ -2701,6 +2782,8 @@ export interface operations {
           color?: string;
           /** @enum {string} */
           shape?: 'circle' | 'half' | 'triangle' | 'triangle_down' | 'ring' | 'square' | 'quarter' | 'house';
+          /** @description An icon id from the library (/admin/icons); null = none */
+          icon?: string | null;
           active?: boolean;
         };
       };
@@ -2748,6 +2831,141 @@ export interface operations {
         };
         content: {
           'application/json': components['schemas']['AdminCategoryList'];
+        };
+      };
+      /** @description Error */
+      '4XX': {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Error'];
+        };
+      };
+    };
+  };
+  getAdminIcons: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AdminIconList'];
+        };
+      };
+      /** @description Error */
+      '4XX': {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Error'];
+        };
+      };
+    };
+  };
+  postAdminIcons: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          id: string;
+          label: string;
+          /** @description SVG path data (`d`) on a 24×24 grid, filled even-odd */
+          path: string;
+        };
+      };
+    };
+    responses: {
+      /** @description OK */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AdminIcon'];
+        };
+      };
+      /** @description Error */
+      '4XX': {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Error'];
+        };
+      };
+    };
+  };
+  deleteAdminIconsById: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Done, no content */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Error */
+      '4XX': {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Error'];
+        };
+      };
+    };
+  };
+  patchAdminIconsById: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          label?: string;
+          /** @description SVG path data (`d`) on a 24×24 grid, filled even-odd */
+          path?: string;
+        };
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AdminIcon'];
         };
       };
       /** @description Error */

@@ -7,6 +7,7 @@ import { SignIn } from '../shared/components/SignIn';
 import { number } from '../shared/format';
 import { signOut, useMe, useSessionReset, useToken } from '../shared/session';
 import { Categories } from './Categories';
+import { Icons } from './Icons';
 import { People } from './People';
 import { Settings } from './Settings';
 
@@ -58,7 +59,7 @@ export function AdminApp() {
 }
 
 function Dashboard({ myEmail }: { myEmail: string }) {
-  const [tab, setTab] = useState<'people' | 'categories' | 'settings'>('people');
+  const [tab, setTab] = useState<'people' | 'categories' | 'icons' | 'settings'>('people');
   const stats = useQuery({ queryKey: ['stats', 'network'], queryFn: () => unwrap(api.GET('/stats/network')) });
   const s = stats.data;
   return (
@@ -83,6 +84,7 @@ function Dashboard({ myEmail }: { myEmail: string }) {
           [
             ['people', 'Ludzie'],
             ['categories', 'Kategorie'],
+            ['icons', 'Ikony'],
             ['settings', 'Ustawienia'],
           ] as const
         ).map(([key, label]) => (
@@ -98,7 +100,15 @@ function Dashboard({ myEmail }: { myEmail: string }) {
           </button>
         ))}
       </div>
-      {tab === 'people' ? <People myEmail={myEmail} /> : tab === 'categories' ? <Categories /> : <Settings />}
+      {tab === 'people' ? (
+        <People myEmail={myEmail} />
+      ) : tab === 'categories' ? (
+        <Categories />
+      ) : tab === 'icons' ? (
+        <Icons />
+      ) : (
+        <Settings />
+      )}
     </main>
   );
 }

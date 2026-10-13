@@ -1,8 +1,8 @@
 import type { Category } from '../api';
-import { categoryInfo, shapeMarkup, shapeSvg, type Shape } from '../categories';
+import { categoryInfo, iconSvg, shapeMarkup, shapeSvg, type Shape } from '../categories';
 
 /**
- * The category's shape in its colour (or `color`, e.g. on a coloured card), named for screen readers (colour never
+ * The category's pictogram (or shape) in its colour (or `color`, e.g. on a coloured card), named for screen readers (colour never
  * carries meaning alone).
  */
 export function CategoryMark({
@@ -17,6 +17,11 @@ export function CategoryMark({
   color?: string;
 }) {
   return <Svg markup={shapeMarkup(category, color)} size={size} label={title ? categoryInfo(category).label : null} />;
+}
+
+/** An icon's path (24×24 grid), e.g. in the icon library; falls back to a square for invalid path data. */
+export function IconMark({ path, color, size = 20 }: { path: string; color: string; size?: number }) {
+  return <Svg markup={iconSvg(path, color) ?? shapeSvg('square', color)} size={size} label={null} />;
 }
 
 /** A bare shape, e.g. a category being edited. */
@@ -34,7 +39,7 @@ function Svg({ markup, size, label }: { markup: string; size: number; label: str
       aria-label={label ?? undefined}
       aria-hidden={label ? undefined : true}
       style={{ flex: 'none' }}
-      // Fixed shapes from categories.ts; colours are checked to be #RRGGBB there. No other data goes in.
+      // Fixed shapes and icon paths checked in categories.ts (path commands and numbers only, colours #RRGGBB).
       dangerouslySetInnerHTML={{ __html: markup }}
     />
   );
