@@ -665,6 +665,90 @@ export interface paths {
     patch: operations['patchAdminIconsById'];
     trace?: never;
   };
+  '/me/devices': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * Register a device for push notifications
+     * @description Call after the system gives the app a token (every launch is fine). A token moves to the signed-in person if someone else used the device before. 422 for an app id the server does not send to.
+     */
+    put: operations['putMeDevices'];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/me/devices/{token}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * Unregister a device
+     * @description On sign-out, or when the person turns notifications off. Unknown tokens are fine.
+     */
+    delete: operations['deleteMeDevicesByToken'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/admin/push': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Push notifications: who gets them
+     * @description Every active member with their notification settings and devices, and whether APNs is set up.
+     */
+    get: operations['getAdminPush'];
+    put?: never;
+    /**
+     * Send a push notification
+     * @description To everyone, chosen people, or people with chosen favourite categories — on all their devices. `place_id` opens that place when tapped. Waits for APNs and returns the counts (all failed when push is not configured).
+     */
+    post: operations['postAdminPush'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/admin/push/log': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Sent push notifications
+     * @description The latest notifications: new places, comments and admin messages, newest first.
+     */
+    get: operations['getAdminPushLog'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -699,6 +783,16 @@ export interface components {
       /** @description First day of the current month (Europe/Warsaw), YYYY-MM-DD */
       month: string;
     };
+    /** @description What push notifications I get. */
+    NotificationPrefs: {
+      /**
+       * @description New places: all of them, only in my favourite categories (default), or none
+       * @enum {string}
+       */
+      new_places: 'all' | 'favorites' | 'none';
+      /** @description Comments on places I added, commented on or saved */
+      comments: boolean;
+    };
     /** @description The signed-in member. */
     Me: {
       /** Format: uuid */
@@ -715,6 +809,7 @@ export interface components {
       /** Format: date-time */
       created_at: string;
       email: string;
+      notifications: components['schemas']['NotificationPrefs'];
       /** @description Can use the /admin endpoints (the admin dashboard of the web app) */
       is_admin: boolean;
       /** @description false until POST /me/profile; the app shows onboarding */
@@ -1172,6 +1267,72 @@ export interface components {
     AdminCategoryList: {
       items: components['schemas']['AdminCategory'][];
     };
+    Device: {
+      /** @enum {string} */
+      platform: 'ios' | 'android';
+      /** @enum {string} */
+      environment: 'sandbox' | 'production';
+      /** @description Bundle id / package name */
+      app_id: string;
+      /** Format: date-time */
+      created_at: string;
+      /** Format: date-time */
+      last_seen_at: string;
+    };
+    PushCounts: {
+      /** @description People chosen */
+      recipients: number;
+      /** @description Their devices */
+      devices: number;
+      /** @description Accepted by APNs */
+      delivered: number;
+      /** @description Not delivered (also every device when push is not configured) */
+      failed: number;
+    };
+    /** @description A member and the devices they get notifications on. */
+    PushSubscriber: {
+      profile: components['schemas']['Profile'];
+      email: string;
+      notifications: components['schemas']['NotificationPrefs'];
+      devices: components['schemas']['Device'][];
+    };
+    PushOverview: {
+      /** @description APNs credentials are set; without them nothing is sent */
+      configured: boolean;
+      /** @description Every active member, with or without devices */
+      members: components['schemas']['PushSubscriber'][];
+    };
+    PushLogEntry: {
+      /** @description People chosen */
+      recipients: number;
+      /** @description Their devices */
+      devices: number;
+      /** @description Accepted by APNs */
+      delivered: number;
+      /** @description Not delivered (also every device when push is not configured) */
+      failed: number;
+      /** Format: uuid */
+      id: string;
+      /** Format: date-time */
+      created_at: string;
+      /** @enum {string} */
+      kind: 'new_place' | 'new_comment' | 'admin';
+      title: string;
+      body: string;
+      /** Format: uuid */
+      place_id: string | null;
+      audience: {
+        [key: string]: unknown;
+      };
+      sent_by: {
+        /** Format: uuid */
+        id: string;
+        display_name: string;
+      } | null;
+    };
+    PushLog: {
+      items: components['schemas']['PushLogEntry'][];
+    };
   };
   responses: never;
   parameters: never;
@@ -1324,6 +1485,15 @@ export interface operations {
           display_name?: string;
           badge?: string | null;
           favorite_categories?: string[];
+          notifications?: {
+            /**
+             * @description New places: all of them, only in my favourite categories (default), or none
+             * @enum {string}
+             */
+            new_places?: 'all' | 'favorites' | 'none';
+            /** @description Comments on places I added, commented on or saved */
+            comments?: boolean;
+          };
         };
       };
     };
@@ -2966,6 +3136,192 @@ export interface operations {
         };
         content: {
           'application/json': components['schemas']['AdminIcon'];
+        };
+      };
+      /** @description Error */
+      '4XX': {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Error'];
+        };
+      };
+    };
+  };
+  putMeDevices: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          /** @description APNs device token (hex) or FCM registration token */
+          token: string;
+          /** @enum {string} */
+          platform: 'ios' | 'android';
+          /**
+           * @description APNs environment: `sandbox` for development-signed builds, `production` otherwise
+           * @enum {string}
+           */
+          environment: 'sandbox' | 'production';
+          /** @description Bundle id / package name (the APNs topic) */
+          app_id: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Done, no content */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Error */
+      '4XX': {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Error'];
+        };
+      };
+    };
+  };
+  deleteMeDevicesByToken: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        token: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Done, no content */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Error */
+      '4XX': {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Error'];
+        };
+      };
+    };
+  };
+  getAdminPush: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['PushOverview'];
+        };
+      };
+      /** @description Error */
+      '4XX': {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Error'];
+        };
+      };
+    };
+  };
+  postAdminPush: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          /** @description Everyone (`all`), chosen people (`users`), or people with any of the `categories` among their favourites */
+          audience:
+            | {
+                /** @enum {string} */
+                kind: 'all';
+              }
+            | {
+                /** @enum {string} */
+                kind: 'users';
+                user_ids: string[];
+              }
+            | {
+                /** @enum {string} */
+                kind: 'categories';
+                categories: string[];
+              };
+          title: string;
+          body: string;
+          /** Format: uuid */
+          place_id?: string | null;
+        };
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['PushCounts'];
+        };
+      };
+      /** @description Error */
+      '4XX': {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Error'];
+        };
+      };
+    };
+  };
+  getAdminPushLog: {
+    parameters: {
+      query?: {
+        limit?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['PushLog'];
         };
       };
       /** @description Error */
