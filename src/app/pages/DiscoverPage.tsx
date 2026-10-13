@@ -1,6 +1,7 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { useTagSuggestions } from '../tags';
 import { api, unwrap, type Category } from '../../shared/api';
 import { categoryInfo, categoryChoices } from '../../shared/categories';
 import { CategoryMark } from '../../shared/components/CategoryMark';
@@ -43,27 +44,42 @@ export function DiscoverPage() {
     boolean
   >;
   const needsGeo = sort === 'nearest' || radius != null;
-
-  const set = (changes: Record<string, string | null>) =>
-    setParams(
-      (prev) => {
-        const next = new URLSearchParams(prev);
-        for (const [k, v] of Object.entries(changes)) {
-          if (v == null || v === '') next.delete(k);
-          else next.set(k, v);
-        }
-        return next;
-      },
-      { replace: true },
-    );
-
-  // Debounced search box. Writes only real changes: a no-op navigation would cancel a pending one (lazy routes).
   const urlQ = params.get('q') ?? '';
+  const lowerTags = tags.map((t) => t.toLowerCase());
+  const tagMatches = (useTagSuggestions(urlQ, null, 8, urlQ.length >= 2).data ?? [])
+    .filter((t) => urlQ.length >= 2 && !lowerTags.includes(t.tag.toLowerCase()))
+    .slice(0, 5);
+  const popularTags = useTagSuggestions('', categories.length === 1 ? categories[0]! : null, 12).data ?? [];
+
+  // Always change the latest URL: a debounced write must not bring back filters changed in the meantime.
+  const latest = useRef(params);
+  latest.current = params;
+  const set = (changes: Record<string, string | null>) => {
+    const next = new URLSearchParams(latest.current);
+    for (const [k, v] of Object.entries(changes)) {
+      if (v == null || v === '') next.delete(k);
+      else next.set(k, v);
+    }
+    latest.current = next;
+    setParams(next, { replace: true });
+  };
+
+  // Debounced search box, for what the person typed. Writes only real changes: a no-op navigation would cancel a
+  // pending one (lazy routes).
+  const typed = useRef(false);
   useEffect(() => {
-    if (q.trim() === urlQ) return;
+    if (!typed.current || q.trim() === (latest.current.get('q') ?? '')) return;
     const t = setTimeout(() => set({ q: q.trim() || null }), 300);
     return () => clearTimeout(t);
-  }, [q]); // only typing triggers it; `set` only writes the URL
+  }, [q]);
+  const typeQ = (text: string) => {
+    typed.current = true;
+    setQ(text);
+  };
+  const clearQ = () => {
+    typed.current = false;
+    setQ('');
+  };
 
   useEffect(() => {
     if (needsGeo && geo.status === 'idle') geo.request();
@@ -109,9 +125,28 @@ export function DiscoverPage() {
           type="search"
           placeholder="Szukaj miejsc, ulic, tagów…"
           value={q}
-          onChange={(e) => setQ(e.target.value)}
+          onChange={(e) => typeQ(e.target.value)}
         />
       </div>
+      {tagMatches.length > 0 && (
+        <div className="tag-popular" role="group" aria-label="Pasujące tagi">
+          <span className="data muted">Tagi:</span>
+          {tagMatches.map((t) => (
+            <button
+              key={t.tag}
+              type="button"
+              className="chip chip-suggest"
+              onClick={() => {
+                // Filter by the tag instead of searching the text.
+                clearQ();
+                set({ q: null, tags: [...tags, t.tag].join(',') });
+              }}
+            >
+              # {t.tag} <span className="data">{t.places}</span>
+            </button>
+          ))}
+        </div>
+      )}
 
       <div className="chips" role="group" aria-label="Sortowanie">
         {SORTS.map(([key, label]) => (
@@ -164,6 +199,26 @@ export function DiscoverPage() {
             );
           })}
         </div>
+        {popularTags.length > 0 && (
+          <div className="chips" role="group" aria-label="Popularne tagi">
+            {popularTags.map((t) => {
+              const on = tags.includes(t.tag);
+              return (
+                <button
+                  key={t.tag}
+                  type="button"
+                  className="chip"
+                  aria-pressed={on}
+                  onClick={() =>
+                    set({ tags: (on ? tags.filter((x) => x !== t.tag) : [...tags, t.tag]).join(',') || null })
+                  }
+                >
+                  # {t.tag}
+                </button>
+              );
+            })}
+          </div>
+        )}
         <div className="chips" role="group" aria-label="Odległość">
           {RADII.map(([m, label]) => (
             <button

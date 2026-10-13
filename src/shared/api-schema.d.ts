@@ -21,6 +21,26 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/tags': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Tag suggestions
+     * @description Tags used on places, most used first. `q` matches anywhere in the tag, ignoring case and Polish accents (tags starting with it first); `category` puts the tags of that category first. Spellings that differ only in case count as one tag.
+     */
+    get: operations['getTags'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/auth/google': {
     parameters: {
       query?: never;
@@ -1333,6 +1353,16 @@ export interface components {
     PushLog: {
       items: components['schemas']['PushLogEntry'][];
     };
+    TagList: {
+      items: {
+        /** @description As most places spell it */
+        tag: string;
+        /** @description Places with this tag */
+        places: number;
+        /** @description Of them, places in `category` (0 without it) */
+        in_category: number;
+      }[];
+    };
   };
   responses: never;
   parameters: never;
@@ -1358,6 +1388,39 @@ export interface operations {
         };
         content: {
           'application/json': components['schemas']['Meta'];
+        };
+      };
+      /** @description Error */
+      '4XX': {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Error'];
+        };
+      };
+    };
+  };
+  getTags: {
+    parameters: {
+      query?: {
+        q?: string;
+        category?: string;
+        limit?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['TagList'];
         };
       };
       /** @description Error */

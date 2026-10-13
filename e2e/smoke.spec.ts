@@ -102,6 +102,18 @@ test('discover, search, a place, stats and profile', async ({ page }) => {
   await expect(page).toHaveURL(/q=pawilon/);
   await expect(cards.first()).toContainText(/pawilon/i);
 
+  // Matching tags are offered while typing; picking one filters by it instead.
+  await page.getByLabel('Szukaj miejsc').fill('weg');
+  await page.getByRole('group', { name: 'Pasujące tagi' }).getByRole('button', { name: /Wege/ }).click();
+  await expect(page).toHaveURL(/tags=Wege/);
+  await expect(page).not.toHaveURL(/q=/);
+  await expect(page.getByLabel('Szukaj miejsc')).toHaveValue('');
+  await expect(cards.first()).toBeVisible();
+  await page.getByRole('group', { name: 'Tagi', exact: true }).getByRole('button', { name: /Wege/ }).click();
+  await expect(page).not.toHaveURL(/tags=/);
+  await page.getByLabel('Szukaj miejsc').fill('pawilon');
+  await expect(cards.first()).toContainText(/pawilon/i);
+
   await cards.first().click();
   await expect(page.getByText('Ocena łączna')).toBeVisible();
   await expect(page.getByRole('heading', { name: /Komentarze/ })).toBeVisible();
@@ -146,6 +158,16 @@ test('add a place with rating, photo and map pin', async ({ page }) => {
   await map.click({ position: { x: 200, y: 150 } });
   await expect(page.getByText(/^52\.\d+, 2\d\.\d+$/)).toBeVisible();
   await page.getByLabel('Dlaczego warto').fill('Test end-to-end.');
+
+  // Tags: a suggestion, one typed (closed by a comma) and a popular one for the category.
+  const tagInput = page.getByRole('combobox', { name: 'Tagi' });
+  await tagInput.fill('ogr');
+  await page.getByRole('option', { name: /Ogródek/ }).click();
+  await tagInput.fill('Testowy tag,');
+  const chosen = page.getByRole('group', { name: 'Wybrane tagi' });
+  await expect(chosen.getByRole('button')).toHaveText([/Ogródek/, /Testowy tag/]);
+  await page.locator('.tag-popular .chip-suggest').first().click();
+  await expect(chosen.getByRole('button')).toHaveCount(3);
   await page.getByRole('button', { name: 'Klimat: 4 na 5' }).click();
   await page.getByRole('button', { name: 'Oferta: 5 na 5' }).click();
   await page
@@ -165,6 +187,8 @@ test('add a place with rating, photo and map pin', async ({ page }) => {
 
   await expect(page.locator('.place-name')).toHaveText(name);
   await expect(page.getByText('Test end-to-end.')).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Ogródek' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Testowy tag' })).toBeVisible();
   await expect(page.locator('.gallery-item').first().locator('.fx-halftone')).toBeVisible();
 
   await page.goto(`/?q=${encodeURIComponent(name)}`);

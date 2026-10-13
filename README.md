@@ -9,11 +9,11 @@ The API is [dobre-mleko-be](https://github.com/mwalczak/dobre-mleko-be)
 
 | Path                       | What                                                                                                                                                        |
 | -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/`                        | Odkrywaj: search, sort and filter places (filters live in the URL)                                                                                          |
+| `/`                        | Odkrywaj: search (with matching tags to filter by), sort and filter places (filters live in the URL)                                                        |
 | `/map`                     | Every place in view as a category-shaped marker                                                                                                             |
 | `/places/:id`              | A place: photos, scores per criterion, gold star, save, navigate, comments                                                                                  |
 | `/places/:id/rate`         | Rate with the four criteria and at least one photo                                                                                                          |
-| `/add`, `/places/:id/edit` | Add or edit a place, with its location picked on a map and its card style                                                                                   |
+| `/add`, `/places/:id/edit` | Add or edit a place: find it by name or address (or click the map, drag the pin), tags with suggestions, card style                                         |
 | `/stats`, `/me`            | Network and personal stats; profile, avatar, saved places, my ratings                                                                                       |
 | `/admin/`                  | Admin dashboard: the whitelist (Ludzie), places (Miejsca), push notifications (Powiadomienia), categories (Kategorie), icons (Ikony), settings (Ustawienia) |
 

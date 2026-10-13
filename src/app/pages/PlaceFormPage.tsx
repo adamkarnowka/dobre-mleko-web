@@ -13,6 +13,7 @@ import { MapView } from '../components/MapView';
 import { PhotoPicker, type Uploaded } from '../components/PhotoPicker';
 import { EMPTY_SCORES, RatingInput, scoresComplete, type ScoresDraft } from '../components/RatingInput';
 import { PlaceSearch } from '../components/PlaceSearch';
+import { TagInput } from '../components/TagInput';
 import { reverseGeocode, type GeoResult } from '../geocode';
 import { useGeo, DEFAULT_CENTER, type Coords } from '../geo';
 import { usePlace } from './PlacePage';
@@ -24,7 +25,7 @@ type Draft = {
   address: string;
   description: string;
   price: number | null;
-  tags: string;
+  tags: string[];
   status: PlaceDetail['status'];
   style: CardStyle;
 };
@@ -36,7 +37,7 @@ const fromPlace = (p: PlaceDetail): Draft => ({
   address: p.address ?? '',
   description: p.description ?? '',
   price: p.price_level,
-  tags: p.tags.join(', '),
+  tags: p.tags,
   status: p.status,
   style: p.card_style,
 });
@@ -48,22 +49,10 @@ const EMPTY: Draft = {
   address: '',
   description: '',
   price: null,
-  tags: '',
+  tags: [],
   status: 'active',
   style: DEFAULT_CARD_STYLE,
 };
-
-const parseTags = (s: string) =>
-  [
-    ...new Set(
-      s
-        .split(',')
-        .map((t) => t.trim())
-        .filter(Boolean),
-    ),
-  ]
-    .slice(0, 10)
-    .map((t) => t.slice(0, 30));
 
 /** Adding a place needs the author's rating and at least one photo, sent together (POST /places). */
 export function AddPlacePage() {
@@ -88,7 +77,7 @@ export function AddPlacePage() {
             address: draft.address.trim() || null,
             description: draft.description.trim() || null,
             price_level: draft.price,
-            tags: parseTags(draft.tags),
+            tags: draft.tags,
             rating: { vibe: scores.vibe!, offer: scores.offer!, service: scores.service, value: scores.value },
             photo_ids: photos.map((x) => x.id),
             gold_star: goldStar,
@@ -183,7 +172,7 @@ function EditPlace({ p }: { p: PlaceDetail }) {
             address: draft.address.trim() || null,
             description: draft.description.trim() || null,
             price_level: draft.price,
-            tags: parseTags(draft.tags),
+            tags: draft.tags,
             status: draft.status,
             card_style: draft.style,
           },
@@ -407,16 +396,7 @@ function PlaceFields({ draft, onChange }: { draft: Draft; onChange: Dispatch<Set
         </div>
       </fieldset>
 
-      <div className="field">
-        <label htmlFor="place-tags">Tagi</label>
-        <input
-          id="place-tags"
-          placeholder="Ogródek, Późno w nocy, Wege"
-          value={draft.tags}
-          onChange={(e) => set({ tags: e.target.value })}
-        />
-        <span className="data muted">Po przecinku, do 10.</span>
-      </div>
+      <TagInput value={draft.tags} onChange={(tags) => set({ tags })} category={draft.category} />
     </>
   );
 }

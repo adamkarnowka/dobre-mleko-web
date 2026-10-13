@@ -368,6 +368,23 @@
   display: none;
 }
 
+/* Tag suggestions (TagInput, Discover) */
+.tag-popular {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin: var(--space-2) 0 var(--space-3);
+}
+
+.chip-suggest {
+  border-style: dashed;
+}
+
+.tag-input .chips {
+  margin-bottom: var(--space-2);
+}
+
 /* Place search (combobox over the location picker) */
 .place-search {
   position: relative;
