@@ -7,15 +7,15 @@ React 19 · TypeScript · Vite · React Router · TanStack Query · openapi-fetc
 The API is [dobre-mleko-be](https://github.com/mwalczak/dobre-mleko-be)
 ([API docs](https://mwalczak.github.io/dobre-mleko-be/)).
 
-| Path                       | What                                                                                              |
-| -------------------------- | ------------------------------------------------------------------------------------------------- |
-| `/`                        | Odkrywaj: search, sort and filter places (filters live in the URL)                                |
-| `/map`                     | Every place in view as a category-shaped marker                                                   |
-| `/places/:id`              | A place: photos, scores per criterion, gold star, save, navigate, comments                        |
-| `/places/:id/rate`         | Rate with the four criteria and at least one photo                                                |
-| `/add`, `/places/:id/edit` | Add or edit a place, with its location picked on a map and its card style                         |
-| `/stats`, `/me`            | Network and personal stats; profile, avatar, saved places, my ratings                             |
-| `/admin/`                  | Admin dashboard: the whitelist (Ludzie), categories (Kategorie) and runtime settings (Ustawienia) |
+| Path                       | What                                                                                                                    |
+| -------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `/`                        | Odkrywaj: search, sort and filter places (filters live in the URL)                                                      |
+| `/map`                     | Every place in view as a category-shaped marker                                                                         |
+| `/places/:id`              | A place: photos, scores per criterion, gold star, save, navigate, comments                                              |
+| `/places/:id/rate`         | Rate with the four criteria and at least one photo                                                                      |
+| `/add`, `/places/:id/edit` | Add or edit a place, with its location picked on a map and its card style                                               |
+| `/stats`, `/me`            | Network and personal stats; profile, avatar, saved places, my ratings                                                   |
+| `/admin/`                  | Admin dashboard: the whitelist (Ludzie), places (Miejsca), categories (Kategorie), icons (Ikony), settings (Ustawienia) |
 
 Signed-out visitors see the manifest and the sign-in; first sign-in asks for a profile. The dashboard is only for
 admins (others see "Brak dostępu"). Both use the same session (one token in `localStorage`), so signing in to one

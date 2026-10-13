@@ -321,3 +321,156 @@ table.people {
   flex-wrap: wrap;
   gap: 6px;
 }
+
+/* Places --------------------------------------------------------------------------------------------------- */
+.place-filters {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.place-filters .grow {
+  flex: 1 1 260px;
+}
+
+.place-filters .check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+}
+
+.place-admin-list {
+  list-style: none;
+  margin: 0 0 16px;
+  padding: 0;
+}
+
+.place-admin-row {
+  border-bottom: var(--line-1);
+  padding: 10px 16px;
+}
+
+.place-admin-row:last-child {
+  border-bottom: 0;
+}
+
+.place-admin-row.retired .place-admin-name,
+.place-admin-row.retired .place-admin-thumb {
+  opacity: 0.55;
+}
+
+.place-admin-line {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.place-admin-thumb {
+  width: 56px;
+  height: 56px;
+  flex: none;
+  overflow: hidden;
+  border: var(--line-1);
+}
+
+.place-admin-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.place-admin-thumb-empty {
+  display: grid;
+  place-items: center;
+  background: var(--paper);
+}
+
+.place-admin-name {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 260px;
+  min-width: 0;
+}
+
+.place-admin-name a {
+  color: inherit;
+}
+
+.place-manager {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.place-manager-section {
+  padding: 12px;
+  background: var(--paper);
+  border: var(--line-1);
+}
+
+.place-photos {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.place-photos li {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.place-photo {
+  width: 120px;
+  height: 120px;
+  overflow: hidden;
+  border: var(--line-1);
+}
+
+.place-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.place-comments {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+}
+
+.place-comments li {
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 8px 0;
+  border-bottom: var(--line-1);
+}
+
+.place-comments li:last-child {
+  border-bottom: 0;
+}
+
+.place-comments p {
+  margin: 4px 0 0;
+}
+
+.place-admin-line > select {
+  width: auto;
+  flex: none;
+}
+
+.place-filters .check input {
+  width: 24px;
+  height: 24px;
+  accent-color: var(--ink);
+}
