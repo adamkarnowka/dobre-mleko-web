@@ -12,10 +12,13 @@ import { DiscoverPage } from './pages/DiscoverPage';
 import { MePage } from './pages/MePage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { PlacePage } from './pages/PlacePage';
+import { PrivacyPage } from './pages/PrivacyPage';
 import { RatePage } from './pages/RatePage';
 import { StatsPage } from './pages/StatsPage';
 
 const router = createBrowserRouter([
+  // Public, without signing in (linked from the App Store).
+  { path: '/privacy', element: <PrivacyPage /> },
   {
     element: <Shell />,
     children: [
