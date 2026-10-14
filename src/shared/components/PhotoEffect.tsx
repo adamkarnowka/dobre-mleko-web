@@ -1,12 +1,13 @@
 import { useId } from 'react';
-import { INK, luminance, mix, PAPER, rgb, type PhotoFilter } from '../cardStyle';
+import { INK, luminance, mix, PAPER, rgb, warmFor, type PhotoFilter } from '../cardStyle';
 
 export type Effect = { filter: PhotoFilter; intensity: number; color: string };
 
 /**
  * The photo filter, drawn over the original photo; its opacity is the filter's strength.
- * Duotone and riso are SVG colour filters; halftone and engraving threshold the photo against a dot or line screen
- * (CSS contrast over a multiplied pattern), then print it in the card's colour on paper.
+ * Duotone, riso, xerox, mosaic and sunset are SVG colour filters (the last three in flat palette tones, no blends);
+ * halftone, engraving and hatch threshold the photo against a dot or line screen (CSS contrast over a multiplied
+ * pattern), then print it in the card's colour (hatch: in ink) on paper.
  */
 export function PhotoEffect({ src, effect }: { src: string; effect: Effect }) {
   const id = `fx${useId().replace(/[^a-zA-Z0-9]/g, '')}`;
@@ -14,9 +15,10 @@ export function PhotoEffect({ src, effect }: { src: string; effect: Effect }) {
   if (filter === 'none' || intensity <= 0) return null;
   const opacity = Math.min(intensity, 100) / 100;
 
-  if (filter === 'halftone' || filter === 'engraving') {
+  if (filter === 'halftone' || filter === 'engraving' || filter === 'hatch') {
+    const print = filter === 'hatch' ? INK : color;
     return (
-      <div className={`fx fx-screen fx-${filter}`} style={{ opacity, ['--fx-color' as string]: color }} aria-hidden>
+      <div className={`fx fx-screen fx-${filter}`} style={{ opacity, ['--fx-color' as string]: print }} aria-hidden>
         <div className="fx-threshold">
           <img src={src} alt="" />
         </div>
@@ -29,7 +31,13 @@ export function PhotoEffect({ src, effect }: { src: string; effect: Effect }) {
       <svg width="0" height="0" focusable="false">
         <filter id={id} x="0" y="0" width="100%" height="100%" colorInterpolationFilters="sRGB">
           <feColorMatrix type="saturate" values="0" result="gray" />
-          {filter === 'duotone' ? <Duotone color={color} /> : <Riso color={color} />}
+          {filter === 'duotone' && <Duotone color={color} />}
+          {filter === 'riso' && <Riso color={color} />}
+          {filter === 'xerox' && <Transfer type="discrete" stops={[rgb(INK), rgb(PAPER), rgb(PAPER)]} />}
+          {filter === 'mosaic' && <Mosaic color={color} />}
+          {filter === 'sunset' && (
+            <Transfer type="discrete" stops={[rgb(INK), middle(color), rgb(warmFor(color)), rgb(PAPER)]} />
+          )}
         </filter>
       </svg>
       <img src={src} alt="" style={{ filter: `url(#${id})` }} />
@@ -41,6 +49,23 @@ export function PhotoEffect({ src, effect }: { src: string; effect: Effect }) {
 function Duotone({ color }: { color: string }) {
   const [dark, light] = luminance(color) < 0.05 ? [rgb(color), rgb(PAPER)] : [rgb(INK), rgb(color)];
   return <Transfer type="table" stops={[dark, light]} />;
+}
+
+/** The card's colour as a middle tone; a dark card would vanish in the ink, so it becomes grey. */
+const middle = (color: string) => (luminance(color) < 0.05 ? mix(rgb(INK), rgb(PAPER), 0.4) : rgb(color));
+
+/** Square pixels (6 px), then three flat tones: ink, the card's colour, paper. */
+function Mosaic({ color }: { color: string }) {
+  return (
+    <>
+      <feFlood x="3" y="3" width="1" height="1" in="gray" />
+      <feComposite width="6" height="6" />
+      <feTile result="grid" />
+      <feComposite in="gray" in2="grid" operator="in" />
+      <feMorphology operator="dilate" radius="3" />
+      <Transfer type="discrete" stops={[rgb(INK), middle(color), rgb(PAPER)]} />
+    </>
+  );
 }
 
 /** Four flat tones of one ink on paper, with grain. */

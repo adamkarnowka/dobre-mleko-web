@@ -112,13 +112,15 @@ export function CardStyleFields({
         <div className="card-style-preview" aria-label="Podgląd karty">
           <span className="label">Podgląd</span>
           <div className="place-card panel">
-            <CardArt category={cat} style={value} photo={photo} position={0} />
+            <CardArt category={cat} style={value} photo={photo} position={0} name={name.trim() || 'Nazwa miejsca'} />
             <div className="place-card-body">
               <h3 className="place-card-name">{name.trim() || 'Nazwa miejsca'}</h3>
               <p className="label place-card-meta">{categoryInfo(cat).label}</p>
             </div>
           </div>
-          {!photo && value.layout !== 'b' && <span className="data muted">Bez zdjęcia karta jest plakatem.</span>}
+          {!photo && value.layout !== 'b' && value.layout !== 'ribbon' && (
+            <span className="data muted">Bez zdjęcia karta jest plakatem.</span>
+          )}
         </div>
       </div>
     </section>

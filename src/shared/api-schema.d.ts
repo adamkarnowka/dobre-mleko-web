@@ -861,12 +861,12 @@ export interface components {
        * @description List card: a = photo full width, b = poster without photo, c = photo in a circle; auto = app rotates
        * @enum {string}
        */
-      layout: 'auto' | 'a' | 'b' | 'c';
+      layout: 'auto' | 'a' | 'b' | 'c' | 'diagonal' | 'ribbon' | 'arch' | 'wedge';
       /**
        * @description Filter on the list card and the main photo
        * @enum {string}
        */
-      photo_filter: 'none' | 'duotone' | 'halftone' | 'engraving' | 'riso';
+      photo_filter: 'none' | 'duotone' | 'halftone' | 'engraving' | 'riso' | 'xerox' | 'hatch' | 'mosaic' | 'sunset';
       /** @description Filter strength in percent */
       filter_intensity: number;
       /**
@@ -1888,12 +1888,21 @@ export interface operations {
              * @description List card: a = photo full width, b = poster without photo, c = photo in a circle; auto = app rotates
              * @enum {string}
              */
-            layout?: 'auto' | 'a' | 'b' | 'c';
+            layout?: 'auto' | 'a' | 'b' | 'c' | 'diagonal' | 'ribbon' | 'arch' | 'wedge';
             /**
              * @description Filter on the list card and the main photo
              * @enum {string}
              */
-            photo_filter?: 'none' | 'duotone' | 'halftone' | 'engraving' | 'riso';
+            photo_filter?:
+              | 'none'
+              | 'duotone'
+              | 'halftone'
+              | 'engraving'
+              | 'riso'
+              | 'xerox'
+              | 'hatch'
+              | 'mosaic'
+              | 'sunset';
             /** @description Filter strength in percent */
             filter_intensity?: number;
             /**
@@ -2066,12 +2075,21 @@ export interface operations {
              * @description List card: a = photo full width, b = poster without photo, c = photo in a circle; auto = app rotates
              * @enum {string}
              */
-            layout?: 'auto' | 'a' | 'b' | 'c';
+            layout?: 'auto' | 'a' | 'b' | 'c' | 'diagonal' | 'ribbon' | 'arch' | 'wedge';
             /**
              * @description Filter on the list card and the main photo
              * @enum {string}
              */
-            photo_filter?: 'none' | 'duotone' | 'halftone' | 'engraving' | 'riso';
+            photo_filter?:
+              | 'none'
+              | 'duotone'
+              | 'halftone'
+              | 'engraving'
+              | 'riso'
+              | 'xerox'
+              | 'hatch'
+              | 'mosaic'
+              | 'sunset';
             /** @description Filter strength in percent */
             filter_intensity?: number;
             /**

@@ -85,8 +85,8 @@ retired ones keep their places but are not offered for new ones, and a category 
 `src/shared/categories.ts` keeps them (with the first eleven built in until `/meta` arrives) and draws the shapes.
 
 Each place has a **card style** chosen by its author (`card_style` in the API): the list card's layout (a = photo,
-b = poster, c = photo in a circle, or auto, which rotates them down the list), its colour (one of 16, or the
-category's), and a photo filter (duotone, halftone, engraving, riso) with its strength. The filter shows on the list
+b = poster, c = photo in a circle, diagonal, ribbon, arch, wedge, or auto, which rotates a, b, c down the list), its colour (one of 16, or the
+category's), and a photo filter (duotone, halftone, engraving, riso, xerox, hatch, mosaic, sunset) with its strength. The filter shows on the list
 card and the place's main photo; the gallery keeps the originals. The colours and filters are in
 `src/shared/cardStyle.ts` and `src/shared/components/PhotoEffect.tsx` (SVG and CSS filters drawn over the photo,
 their opacity being the strength).
