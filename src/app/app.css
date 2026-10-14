@@ -368,6 +368,68 @@
   display: none;
 }
 
+/* Diagonal layouts: one slant (~12°), the cut drawn by CutLine. */
+.card-art-cut {
+  position: absolute;
+  inset: 0;
+  background: var(--card);
+  clip-path: polygon(0 40%, 55% 100%, 0 100%);
+}
+
+.card-art-cutline {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.card-art-ribbon {
+  position: absolute;
+  left: -20%;
+  top: 50%;
+  width: 140%;
+  padding: 10px 24%;
+  transform: translateY(-50%) rotate(-12deg);
+  background: var(--ink);
+  color: var(--paper);
+  font: 900 20px/1.1 var(--sans);
+  text-transform: uppercase;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.place-card-photo .card-art-arch {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: auto;
+  height: 88%;
+  aspect-ratio: 3 / 4;
+  transform: translateX(-50%);
+  /* The arch is a shape (half circle on a rectangle), not a rounded corner. */
+  border-radius: 999px 999px 0 0;
+  border: var(--line-2);
+  border-bottom: 0;
+}
+
+.place-card-photo .card-art-wedge {
+  position: absolute;
+  inset: 0;
+  clip-path: polygon(42% 0, 100% 0, 100% 100%, 30% 100%);
+}
+
+.card-art-mark-left {
+  left: 10px;
+  right: auto;
+}
+
+.place-card.compact .card-art-ribbon {
+  font-size: 12px;
+}
+
 /* Tag suggestions (TagInput, Discover) */
 .tag-popular {
   display: flex;
@@ -536,6 +598,13 @@ input[type='range'] {
 
 .fx-engraving .fx-threshold::after {
   background: repeating-linear-gradient(-35deg, #000 0, #fff 3px, #000 6px);
+}
+
+.fx-hatch .fx-threshold::after {
+  background:
+    repeating-linear-gradient(45deg, #000 0, #fff 3px, #000 6px),
+    repeating-linear-gradient(-45deg, #000 0, #fff 3px, #000 6px);
+  background-blend-mode: multiply;
 }
 
 /* Print the black in the card's colour, the white as paper. */

@@ -34,6 +34,10 @@ export const LAYOUTS: Record<CardStyle['layout'], { label: string; hint: string 
   a: { label: 'Zdjęcie', hint: 'Zdjęcie na całą szerokość' },
   b: { label: 'Plakat', hint: 'Kolor i kształt, bez zdjęcia' },
   c: { label: 'Koło', hint: 'Zdjęcie w kole' },
+  diagonal: { label: 'Ukos', hint: 'Zdjęcie ścięte trójkątem koloru' },
+  ribbon: { label: 'Wstęga', hint: 'Kolor przecięty ukośną wstęgą z nazwą, bez zdjęcia' },
+  arch: { label: 'Łuk', hint: 'Zdjęcie w łuku' },
+  wedge: { label: 'Klin', hint: 'Kolor z nazwą, zdjęcie w równoległoboku' },
 };
 
 export const FILTERS: Record<PhotoFilter, string> = {
@@ -42,6 +46,10 @@ export const FILTERS: Record<PhotoFilter, string> = {
   halftone: 'Raster',
   engraving: 'Sztych',
   riso: 'Riso',
+  xerox: 'Ksero',
+  hatch: 'Kreskowanie',
+  mosaic: 'Mozaika',
+  sunset: 'Zachód',
 };
 
 export const DEFAULT_CARD_STYLE: CardStyle = {
@@ -53,16 +61,23 @@ export const DEFAULT_CARD_STYLE: CardStyle = {
 
 export const PAPER = '#F1ECE2';
 export const INK = '#141414';
+export const YELLOW = '#F2B900';
+export const RED = '#D7301F';
+
+/** The warm band of the sunset filter: yellow, or red on a yellow card. */
+export const warmFor = (color: string) => (color.toUpperCase() === YELLOW ? RED : YELLOW);
 
 /** The card's main colour: the chosen one, else the category's. */
 export const cardColor = (style: CardStyle | undefined, category: Category) =>
   style?.color ? CARD_COLORS[style.color].hex : categoryInfo(category).color;
 
 const AUTO_ORDER: CardLayout[] = ['a', 'c', 'b'];
+/** Layouts without a photo; every other one falls back to a poster when the place has no photo. */
+const POSTERS: CardLayout[] = ['b', 'ribbon'];
 
 /**
- * The layout to draw. `auto` rotates through a, c, b by position in the list (or by id outside lists); a and c need
- * a photo, so without one the card is a poster (b).
+ * The layout to draw. `auto` rotates through a, c, b by position in the list (or by id outside lists); the photo
+ * layouts need a photo, so without one the card is a poster (b).
  */
 export function resolveLayout(style: CardStyle | undefined, hasPhoto: boolean, position: number | string): CardLayout {
   let layout = style?.layout ?? 'auto';
@@ -70,7 +85,7 @@ export function resolveLayout(style: CardStyle | undefined, hasPhoto: boolean, p
     const n = typeof position === 'number' ? position : hash(position);
     layout = AUTO_ORDER[n % AUTO_ORDER.length]!;
   }
-  return layout !== 'b' && !hasPhoto ? 'b' : layout;
+  return !POSTERS.includes(layout) && !hasPhoto ? 'b' : layout;
 }
 
 function hash(s: string): number {

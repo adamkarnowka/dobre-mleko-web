@@ -27,6 +27,7 @@ export function PlaceCard({
         photo={p.cover_photo}
         position={index ?? p.id}
         rank={rank}
+        name={p.name}
       />
       <div className="place-card-body">
         <h3 className="place-card-name">{p.name}</h3>
