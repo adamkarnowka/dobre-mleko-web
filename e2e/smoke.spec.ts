@@ -195,6 +195,50 @@ test('add a place with rating, photo and map pin', async ({ page }) => {
   await expect(page.locator('.place-card [data-layout="c"] .fx-halftone')).toBeVisible();
 });
 
+test('add a place from a Google Maps link', async ({ page }) => {
+  const link =
+    'https://www.google.com/maps/place/Kawiarnia+Relaks/@52.2303,21.0071,17z/data=!3m1!4b1!4m6!3m5!1s0x1:0x2!8m2!3d52.2303!4d21.0071?entry=ttu';
+  await signIn(page, 'tomek@example.com', '/add');
+  const input = page.getByLabel('Link z Google Maps');
+
+  // Not a Maps link: a clear message, and the place form is not submitted.
+  await input.fill('https://example.com/miejsce');
+  await input.press('Enter');
+  await expect(page.getByText('To nie wygląda na link do miejsca w Google Maps', { exact: false })).toBeVisible();
+  await expect(page).toHaveURL(/\/add$/);
+
+  // The link fills name and pin; the same place in OpenStreetMap (mocked Photon) gives address and category.
+  await input.fill(link);
+  await page.getByRole('button', { name: 'Wczytaj' }).click();
+  await expect(page.getByText(/Uzupełniono: nazwę, miejsce na mapie, adres, kategorię/)).toBeVisible();
+  await expect(page.getByLabel('Nazwa')).toHaveValue('Kawiarnia Relaks');
+  await expect(page.getByRole('button', { name: 'Kawa', exact: true })).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByLabel('Adres', { exact: true })).toHaveValue('Złota 8, Warszawa');
+  await expect(page.getByText('52.23030, 21.00710')).toBeVisible();
+
+  await page.getByRole('button', { name: 'Klimat: 5 na 5' }).click();
+  await page.getByRole('button', { name: 'Oferta: 4 na 5' }).click();
+  await page
+    .locator('input[type=file]')
+    .setInputFiles({ name: 'p.jpg', mimeType: 'image/jpeg', buffer: await jpeg(page) });
+  await expect(page.locator('.photo-picker-item img')).toHaveCount(1);
+  await page.getByRole('button', { name: 'Dodaj miejsce' }).click();
+  await expect(page.locator('.place-name')).toHaveText('Kawiarnia Relaks');
+  await expect(page.getByRole('link', { name: 'Google Maps' })).toHaveAttribute('href', link.replace('?entry=ttu', ''));
+
+  // The same link again: the place already there is pointed out.
+  await page.goto('/add');
+  await page.getByLabel('Link z Google Maps').fill(link);
+  await page.getByRole('button', { name: 'Wczytaj' }).click();
+  await expect(page.getByText('Może to miejsce już jest w aplikacji?')).toBeVisible();
+  await expect(
+    page
+      .locator('.maps-link-nearby')
+      .getByRole('link', { name: /Kawiarnia Relaks/ })
+      .first(),
+  ).toBeVisible();
+});
+
 test('find a place by search, then move the pin', async ({ page }) => {
   await signIn(page, 'tomek@example.com', '/add');
   await page.getByLabel('Szukaj miejsca lub adresu').fill('relaks');
@@ -211,7 +255,16 @@ test('find a place by search, then move the pin', async ({ page }) => {
   const pin = map.locator('.maplibregl-marker');
   await expect(pin).toBeVisible();
   await map.scrollIntoViewIfNeeded();
-  const box = (await pin.boundingBox())!;
+  // Wait for the map to finish flying to the result: grab the pin only once it stays put.
+  let box = (await pin.boundingBox())!;
+  await expect
+    .poll(async () => {
+      const now = (await pin.boundingBox())!;
+      const still = Math.abs(now.x - box.x) < 1 && Math.abs(now.y - box.y) < 1;
+      box = now;
+      return still;
+    })
+    .toBe(true);
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
   await page.mouse.down();
   await page.mouse.move(box.x + box.width / 2 + 60, box.y + box.height / 2 + 40, { steps: 8 });

@@ -129,6 +129,11 @@ function Place({ p }: { p: PlaceDetail }) {
         <a className="btn btn-secondary" href={nav} target="_blank" rel="noreferrer">
           Nawiguj
         </a>
+        {p.google_maps_url && (
+          <a className="btn btn-secondary" href={p.google_maps_url} target="_blank" rel="noreferrer">
+            Google Maps
+          </a>
+        )}
         {canEdit && (
           <Link to={`/places/${p.id}/edit`} className="btn btn-secondary">
             Edytuj

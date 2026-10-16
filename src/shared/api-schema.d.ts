@@ -41,6 +41,26 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/maps-links/resolve': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Read a Google Maps link
+     * @description The place's name and position from a Google Maps link (full links and the app's maps.app.goo.gl share links, which are followed on the server, to Google hosts only), plus places already in the app nearby. Fill the rest (address, category) from a map search. The text may contain more than the link. 422 `unrecognized_link` when it is not a Google Maps link to a place or does not resolve.
+     */
+    post: operations['postMapsLinksResolve'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/auth/google': {
     parameters: {
       query?: never;
@@ -55,6 +75,26 @@ export interface paths {
      * @description Exchanges a Google ID token from Google Sign-In for a session token valid for the sessionTtlDays setting. The account is created on first sign-in; `has_profile` is false until onboarding is finished with `POST /me/profile`. 403 `not_authorized` if the email is not on the list, `email_not_verified` if Google has not verified it; 401 `invalid_google_token`.
      */
     post: operations['postAuthGoogle'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/auth/apple': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Sign in with Apple
+     * @description Exchanges a Sign in with Apple identity token (audience: the iOS bundle id, `APPLE_CLIENT_IDS`) for a session, like `/auth/google`; an account with the same e-mail is the same account. `name` is the name Apple gives the app on the first sign-in only, used for a new account. Later tokens may come without the e-mail; the account is then found by its Apple id. 403 `not_authorized` if the e-mail is not on the list, `private_email` if it is a Hide My Email address that is not (sign in again sharing the real e-mail); 401 `invalid_apple_token`.
+     */
+    post: operations['postAuthApple'];
     delete?: never;
     options?: never;
     head?: never;
@@ -92,7 +132,11 @@ export interface paths {
     get: operations['getMe'];
     put?: never;
     post?: never;
-    delete?: never;
+    /**
+     * Delete my account
+     * @description Removes the personal data: e-mail, name, badge, avatar, Google/Apple ids, favourite categories, saved places, devices and the place on the access list. Places, ratings, photos and comments stay, shown as by "Były członek" (status `deleted`). Every session ends. Signing in again with the same e-mail starts a new account, once an admin puts it back on the list. ADMIN_EMAILS admins stay on the list.
+     */
+    delete: operations['deleteMe'];
     options?: never;
     head?: never;
     /**
@@ -695,7 +739,7 @@ export interface paths {
     get?: never;
     /**
      * Register a device for push notifications
-     * @description Call after the system gives the app a token (every launch is fine). A token moves to the signed-in person if someone else used the device before. 422 for an app id the server does not send to.
+     * @description Call after the system gives the app a token (every launch is fine). A token moves to the signed-in person if someone else used the device before. 422 for an iOS app id the server does not send to.
      */
     put: operations['putMeDevices'];
     post?: never;
@@ -734,13 +778,13 @@ export interface paths {
     };
     /**
      * Push notifications: who gets them
-     * @description Every active member with their notification settings and devices, and whether APNs is set up.
+     * @description Every active member with their notification settings and devices, and whether APNs or FCM is set up.
      */
     get: operations['getAdminPush'];
     put?: never;
     /**
      * Send a push notification
-     * @description To everyone, chosen people, or people with chosen favourite categories — on all their devices. `place_id` opens that place when tapped. Waits for APNs and returns the counts (all failed when push is not configured).
+     * @description To everyone, chosen people, or people with chosen favourite categories — on all their devices. `place_id` opens that place when tapped. Waits for APNs and FCM and returns the counts (all failed when push is not configured).
      */
     post: operations['postAdminPush'];
     delete?: never;
@@ -858,7 +902,7 @@ export interface components {
     /** @description How the place is presented in the app, chosen by its author */
     CardStyle: {
       /**
-       * @description List card: a = photo full width, b = poster without photo, c = photo in a circle; auto = app rotates
+       * @description List card: a = photo full width, b = poster without photo, c = photo in a circle, diagonal = photo cut by a coloured triangle, ribbon = poster with a diagonal band, arch = photo in an arch, wedge = photo in a parallelogram; auto = app rotates a, b, c
        * @enum {string}
        */
       layout: 'auto' | 'a' | 'b' | 'c' | 'diagonal' | 'ribbon' | 'arch' | 'wedge';
@@ -1003,6 +1047,8 @@ export interface components {
       /** Format: date-time */
       updated_at: string;
       google_place_id: string | null;
+      /** @description Opens this place in Google Maps */
+      google_maps_url: string | null;
       opening_hours: components['schemas']['OpeningPeriod'][] | null;
       photos: {
         /** Format: uuid */
@@ -1304,7 +1350,7 @@ export interface components {
       recipients: number;
       /** @description Their devices */
       devices: number;
-      /** @description Accepted by APNs */
+      /** @description Accepted by APNs or FCM */
       delivered: number;
       /** @description Not delivered (also every device when push is not configured) */
       failed: number;
@@ -1317,7 +1363,7 @@ export interface components {
       devices: components['schemas']['Device'][];
     };
     PushOverview: {
-      /** @description APNs credentials are set; without them nothing is sent */
+      /** @description APNs or FCM credentials are set; without them nothing is sent */
       configured: boolean;
       /** @description Every active member, with or without devices */
       members: components['schemas']['PushSubscriber'][];
@@ -1327,7 +1373,7 @@ export interface components {
       recipients: number;
       /** @description Their devices */
       devices: number;
-      /** @description Accepted by APNs */
+      /** @description Accepted by APNs or FCM */
       delivered: number;
       /** @description Not delivered (also every device when push is not configured) */
       failed: number;
@@ -1361,6 +1407,26 @@ export interface components {
         places: number;
         /** @description Of them, places in `category` (0 without it) */
         in_category: number;
+      }[];
+    };
+    ResolvedMapsLink: {
+      /** @description The link to store as `google_maps_url` (short links as pasted) */
+      url: string;
+      /** @description The place's name on Google Maps, if the link names one */
+      name: string | null;
+      location: {
+        lat: number;
+        lng: number;
+        /** @description False: the map view's centre, near the place but not on it */
+        precise: boolean;
+      } | null;
+      /** @description Places already in the app within 150 m, likeliest duplicates first */
+      nearby: {
+        /** Format: uuid */
+        id: string;
+        name: string;
+        category_id: string;
+        distance_m: number;
       }[];
     };
   };
@@ -1434,6 +1500,42 @@ export interface operations {
       };
     };
   };
+  postMapsLinksResolve: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          /** @description The pasted link (or share text) */
+          text: string;
+        };
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ResolvedMapsLink'];
+        };
+      };
+      /** @description Error */
+      '4XX': {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Error'];
+        };
+      };
+    };
+  };
   postAuthGoogle: {
     parameters: {
       query?: never;
@@ -1445,6 +1547,42 @@ export interface operations {
       content: {
         'application/json': {
           id_token: string;
+        };
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Session'];
+        };
+      };
+      /** @description Error */
+      '4XX': {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Error'];
+        };
+      };
+    };
+  };
+  postAuthApple: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          id_token: string;
+          name?: string | null;
         };
       };
     };
@@ -1523,6 +1661,33 @@ export interface operations {
         content: {
           'application/json': components['schemas']['Me'];
         };
+      };
+      /** @description Error */
+      '4XX': {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Error'];
+        };
+      };
+    };
+  };
+  deleteMe: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Done, no content */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
       /** @description Error */
       '4XX': {
@@ -1880,12 +2045,17 @@ export interface operations {
           /** @default null */
           google_place_id?: string | null;
           /**
+           * @description A Google Maps link to the place (e.g. `url` from POST /maps-links/resolve)
+           * @default null
+           */
+          google_maps_url?: string | null;
+          /**
            * @description Send only the parts to change
            * @default {}
            */
           card_style?: {
             /**
-             * @description List card: a = photo full width, b = poster without photo, c = photo in a circle; auto = app rotates
+             * @description List card: a = photo full width, b = poster without photo, c = photo in a circle, diagonal = photo cut by a coloured triangle, ribbon = poster with a diagonal band, arch = photo in an arch, wedge = photo in a parallelogram; auto = app rotates a, b, c
              * @enum {string}
              */
             layout?: 'auto' | 'a' | 'b' | 'c' | 'diagonal' | 'ribbon' | 'arch' | 'wedge';
@@ -2069,10 +2239,12 @@ export interface operations {
               }[]
             | null;
           google_place_id?: string | null;
+          /** @description A Google Maps link to the place (e.g. `url` from POST /maps-links/resolve) */
+          google_maps_url?: string | null;
           /** @description Send only the parts to change */
           card_style?: {
             /**
-             * @description List card: a = photo full width, b = poster without photo, c = photo in a circle; auto = app rotates
+             * @description List card: a = photo full width, b = poster without photo, c = photo in a circle, diagonal = photo cut by a coloured triangle, ribbon = poster with a diagonal band, arch = photo in an arch, wedge = photo in a parallelogram; auto = app rotates a, b, c
              * @enum {string}
              */
             layout?: 'auto' | 'a' | 'b' | 'c' | 'diagonal' | 'ribbon' | 'arch' | 'wedge';
@@ -3245,11 +3417,11 @@ export interface operations {
           /** @enum {string} */
           platform: 'ios' | 'android';
           /**
-           * @description APNs environment: `sandbox` for development-signed builds, `production` otherwise
+           * @description APNs environment: `sandbox` for development-signed builds, `production` otherwise (Android: ignored)
            * @enum {string}
            */
           environment: 'sandbox' | 'production';
-          /** @description Bundle id / package name (the APNs topic) */
+          /** @description Bundle id / package name (the APNs topic on iOS) */
           app_id: string;
         };
       };

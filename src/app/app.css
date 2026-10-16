@@ -430,6 +430,35 @@
   font-size: 12px;
 }
 
+/* Google Maps link import (place form) */
+.maps-link {
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  border-style: dashed;
+}
+
+.maps-link-row input {
+  flex: 1 1 240px;
+}
+
+.maps-link-nearby ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.maps-link-nearby a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+}
+
 /* Tag suggestions (TagInput, Discover) */
 .tag-popular {
   display: flex;

@@ -9,6 +9,7 @@ import { useToast } from '../../shared/components/Toast';
 import { PRICE } from '../../shared/format';
 import { useMeta } from '../../shared/session';
 import { CardStyleFields } from '../components/CardStyleFields';
+import { MapsLinkImport, type ResolvedLink } from '../components/MapsLinkImport';
 import { MapView } from '../components/MapView';
 import { PhotoPicker, type Uploaded } from '../components/PhotoPicker';
 import { EMPTY_SCORES, RatingInput, scoresComplete, type ScoresDraft } from '../components/RatingInput';
@@ -16,6 +17,7 @@ import { PlaceSearch } from '../components/PlaceSearch';
 import { TagInput } from '../components/TagInput';
 import { reverseGeocode, type GeoResult } from '../geocode';
 import { useGeo, DEFAULT_CENTER, type Coords } from '../geo';
+import { findInOsm } from '../mapsLink';
 import { usePlace } from './PlacePage';
 
 type Draft = {
@@ -28,6 +30,7 @@ type Draft = {
   tags: string[];
   status: PlaceDetail['status'];
   style: CardStyle;
+  mapsUrl: string | null;
 };
 
 const fromPlace = (p: PlaceDetail): Draft => ({
@@ -40,6 +43,7 @@ const fromPlace = (p: PlaceDetail): Draft => ({
   tags: p.tags,
   status: p.status,
   style: p.card_style,
+  mapsUrl: p.google_maps_url,
 });
 
 const EMPTY: Draft = {
@@ -52,6 +56,7 @@ const EMPTY: Draft = {
   tags: [],
   status: 'active',
   style: DEFAULT_CARD_STYLE,
+  mapsUrl: null,
 };
 
 /** Adding a place needs the author's rating and at least one photo, sent together (POST /places). */
@@ -78,6 +83,7 @@ export function AddPlacePage() {
             description: draft.description.trim() || null,
             price_level: draft.price,
             tags: draft.tags,
+            google_maps_url: draft.mapsUrl,
             rating: { vibe: scores.vibe!, offer: scores.offer!, service: scores.service, value: scores.value },
             photo_ids: photos.map((x) => x.id),
             gold_star: goldStar,
@@ -173,6 +179,7 @@ function EditPlace({ p }: { p: PlaceDetail }) {
             description: draft.description.trim() || null,
             price_level: draft.price,
             tags: draft.tags,
+            google_maps_url: draft.mapsUrl,
             status: draft.status,
             card_style: draft.style,
           },
@@ -286,6 +293,41 @@ function PlaceFields({ draft, onChange }: { draft: Draft; onChange: Dispatch<Set
     }));
   };
 
+  /**
+   * A pasted Google Maps link: the link, the pin, the name if empty; then the same place in OpenStreetMap for the
+   * address and category (or the address at the pin). Says what it filled.
+   */
+  const fromLink = async (link: ResolvedLink): Promise<string[]> => {
+    lookup.current?.abort();
+    const filled: string[] = [];
+    const name = draft.name.trim() || link.name || '';
+    const at = link.location ? roundCoords(link.location) : null;
+    let osm: GeoResult | null = null;
+    if (link.name) {
+      osm = await findInOsm(link.name, at ?? draft.location ?? geo.coords ?? DEFAULT_CENTER, !!at).catch(() => null);
+    }
+    const where = at && link.location?.precise ? at : (osm?.location ?? at);
+    const address = osm?.address ?? (where ? ((await reverseGeocode(where).catch(() => null))?.address ?? null) : null);
+    const category = osm?.category && categoryInfo(osm.category).active ? osm.category : null;
+
+    if (!draft.name.trim() && link.name) filled.push('nazwę');
+    if (where) filled.push('miejsce na mapie');
+    const addressBefore = currentAddress.current;
+    fillAddress(address);
+    if (address && address !== addressBefore && (!addressBefore.trim() || addressBefore === autoAddress.current)) {
+      filled.push('adres');
+    }
+    if (!draft.category && category) filled.push('kategorię');
+    onChange((d) => ({
+      ...d,
+      mapsUrl: link.url,
+      name: d.name.trim() ? d.name : name,
+      location: where ?? d.location,
+      category: d.category ?? category,
+    }));
+    return filled;
+  };
+
   /** A pin set by hand: look up its address. */
   const pinAt = (c: Coords) => {
     set({ location: roundCoords(c) });
@@ -297,6 +339,7 @@ function PlaceFields({ draft, onChange }: { draft: Draft; onChange: Dispatch<Set
   };
   return (
     <>
+      <MapsLinkImport onResolved={fromLink} />
       <div className="field">
         <label htmlFor="place-name">Nazwa</label>
         <input
